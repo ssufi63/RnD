@@ -1,0 +1,94 @@
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-title {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dashboard-card h3 {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.dashboard-metric-title {
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.dashboard-metric {
+  font-size: 40px;
+  font-weight: 700;
+  color: #0d6efd;
+  text-align: center;
+}
+
+/* 📱 Tablet */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 15px;
+  }
+  .dashboard-title {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+}
+
+/* 📱 Mobile with horizontal scroll for charts */
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr; /* stack all cards */
+    gap: 16px;
+  }
+
+  .dashboard-card {
+    padding: 12px;
+  }
+
+  .dashboard-card h3 {
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .chart-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .chart-scroll > div {
+    min-width: 400px; /* keep chart readable */
+  }
+
+  /* Swipe hint (fade gradient on right) */
+  .chart-scroll::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+  }
+}

@@ -109,5 +109,23 @@ input[type="email"], .row + input { width: 100%; }
     line-height: 1.4;
   }
 }
+/* 📱 Sticky login/signup button on small phones */
+@media (max-width: 480px) {
+  .submitButton {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0;   /* full-width bar */
+    height: 56px;
+    font-size: 18px;
+    z-index: 1000;
+  }
+
+  /* Make sure form content isn't hidden behind button */
+  .form {
+    padding-bottom: 70px;
+  }
+}
 
 }

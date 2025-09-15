@@ -1,0 +1,158 @@
+/* Container */
+.assign-task-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 28px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* Form */
+.assign-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Rows & Fields */
+.assign-task-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.assign-task-field {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.assign-task-date {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.assign-task-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #0d6efd;
+  margin-bottom: 6px;
+}
+
+/* Inputs */
+.assign-task-input,
+.assign-task-input-full {
+  height: 48px;
+  padding: 10px 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.assign-task-input-full {
+  width: 100%;
+}
+
+.assign-task-input:focus,
+.assign-task-input-full:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* Dropdowns */
+.assign-task-select {
+  height: 48px;
+  padding: 10px 40px 10px 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff
+    url("data:image/svg+xml;utf8,<svg fill='%23007bff' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")
+    no-repeat right 12px center;
+  background-size: 20px;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.assign-task-select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* Button */
+.assign-task-button {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+  transition: opacity 0.2s ease;
+}
+
+.assign-task-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 📱 Tablet */
+@media (max-width: 768px) {
+  .assign-task-container {
+    margin: 20px;
+    padding: 20px;
+  }
+}
+
+/* 📱 Small phones */
+@media (max-width: 480px) {
+  .assign-task-row {
+    flex-direction: column;
+  }
+
+  .assign-task-field,
+  .assign-task-date {
+    flex: 1 1 100%;
+  }
+
+  .assign-task-input,
+  .assign-task-input-full,
+  .assign-task-select {
+    width: 100%;
+    font-size: 17px;
+    height: 52px; /* larger for thumbs */
+  }
+
+  .assign-task-button {
+    font-size: 18px;
+    height: 54px;
+  }
+  /* 📱 Sticky button on mobile */
+@media (max-width: 480px) {
+  .assign-task-button {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0;  /* full width bar */
+    height: 56px;
+    font-size: 18px;
+    z-index: 1000;
+  }
+
+  /* Add padding to bottom so form content isn't hidden behind button */
+  .assign-task-form {
+    padding-bottom: 70px;
+  }
+}
+
+}
