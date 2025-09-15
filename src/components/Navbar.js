@@ -11,7 +11,9 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchUserAndRole = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const currentUser = session?.user || null;
       setUser(currentUser);
 
@@ -36,29 +38,50 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="logo">Task Manager</div>
-      <div className={`nav-links ${menuOpen ? "open" : ""}`}>
-        {/* <li><Link to="/" onClick={() => setMenuOpen(false)}>Home</Link></li> */}
+      {/* Left side */}
+      <div className="navbar-left">
+        <div className="logo">Task Manager</div>
 
-        {/* {!user && <li><Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link></li>}
-        {!user && <li><Link to="/signup" onClick={() => setMenuOpen(false)}>Signup</Link></li>} */}
+        {/* Burger */}
+        <div
+          className={`burger ${menuOpen ? "toggle" : ""}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <div className="line1"></div>
+          <div className="line2"></div>
+          <div className="line3"></div>
+        </div>
+      </div>
 
-        {user && <li><Link to="/summary" onClick={() => setMenuOpen(false)}>Dashboard</Link></li>}
-        {user && <li><Link to="/mytasks" onClick={() => setMenuOpen(false)}>My Tasks</Link></li>}
-
-        {/* ✅ Only visible if role is admin/leader */}
-        {user && (userRole === "admin" || userRole === "leader") && (
-          <li><Link to="/assigntasks" onClick={() => setMenuOpen(false)}>Assign Tasks</Link></li>
+      {/* Nav links */}
+      <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
+        {user && (
+          <li>
+            <Link to="/summary" onClick={() => setMenuOpen(false)}>
+              Dashboard
+            </Link>
+          </li>
         )}
-
-        {user && <li><button onClick={handleLogout}>Logout</button></li>}
-      </div>
-
-      <div className="burger" onClick={() => setMenuOpen(!menuOpen)}>
-        <div className="line1"></div>
-        <div className="line2"></div>
-        <div className="line3"></div>
-      </div>
+        {user && (
+          <li>
+            <Link to="/mytasks" onClick={() => setMenuOpen(false)}>
+              My Tasks
+            </Link>
+          </li>
+        )}
+        {user && (userRole === "admin" || userRole === "leader") && (
+          <li>
+            <Link to="/assigntasks" onClick={() => setMenuOpen(false)}>
+              Assign Tasks
+            </Link>
+          </li>
+        )}
+        {user && (
+          <li>
+            <button onClick={handleLogout}>Logout</button>
+          </li>
+        )}
+      </ul>
     </nav>
   );
 };
