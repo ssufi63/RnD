@@ -1,0 +1,113 @@
+/* General */
+.fullPage {
+  height: 100vh; display: flex; justify-content: center; align-items: center;
+  background: #f9f9f9;
+}
+.spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 4px solid #e5e7eb; border-top-color: #0d6efd;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Logged-in */
+.loggedInWrap {
+  height: 100vh; display: flex; justify-content: center; align-items: center;
+  background: linear-gradient(135deg, #113bff, #00c6ff);
+  padding: 20px; box-sizing: border-box;
+}
+.quoteCard {
+  background: rgba(255,255,255,0.15); padding: 20px 30px; border-radius: 20px;
+  backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  max-width: 700px; text-align: center; width: 100%;
+}
+.quoteText {
+  font-size: clamp(1.2rem, 4vw, 2.3rem);
+  font-weight: 500; color: #fff; line-height: 1.6; font-style: italic;
+}
+
+/* Auth layout */
+.authPage { display: flex; height: 100vh; font-family: Inter, Arial, sans-serif; }
+.leftPanel {
+  flex: 1; background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 40px 20px; text-align: center;
+}
+.brand { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: bold; margin-bottom: 20px; }
+.tagline { font-size: clamp(1rem, 3vw, 1.2rem); font-style: italic; max-width: 300px; line-height: 1.5; }
+.footer { margin-top: auto; font-size: 0.9rem; opacity: 0.8; }
+
+.rightPanel {
+  flex: 1.2; display: flex; flex-direction: column; justify-content: center;
+  padding: 40px; background: #f9f9f9;
+}
+.tabsWrapper {
+  display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.tab {
+  padding: 10px 20px; border-radius: 25px; border: 1px solid #ddd;
+  background: #fff; cursor: pointer; font-size: 15px; font-weight: 500;
+  transition: all 0.3s ease; color: #333; min-width: 100px;
+}
+.tab.activeTab {
+  background: linear-gradient(135deg, #007bff, #00c6ff); color: #fff;
+  border: 1px solid #007bff; font-weight: 600;
+}
+
+.content { padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.form { display: flex; flex-direction: column; gap: 15px; }
+.row { display: flex; gap: 15px; flex-wrap: wrap; }
+.formTitle { text-align: center; color: #0d6efd; }
+.error { color: red; text-align: center; }
+input {
+  flex: 1 1 45%; height: 44px; padding: 8px 12px; font-size: 15px;
+  border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; min-width: 120px;
+}
+input[type="email"], .row + input { width: 100%; }
+.submitButton {
+  padding: 12px 20px; background: linear-gradient(135deg,#007bff,#00c6ff);
+  color: #fff; border-radius: 10px; border: none; font-weight: 600;
+  cursor: pointer; width: 100%;
+}
+
+/* 📱 Mobile responsiveness */
+@media (max-width: 768px) {
+  .authPage { flex-direction: column; }
+  .leftPanel { flex: none; height: 40vh; }
+  .rightPanel { flex: none; height: 60vh; padding: 20px; }
+  .quoteCard { padding: 15px; }
+
+  /* 📱 Very small screens (<480px) */
+@media (max-width: 480px) {
+  .row {
+    flex-direction: column;
+  }
+  .row input {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+/* 📱 Hide branding panel on very small screens (<480px) */
+@media (max-width: 480px) {
+  .leftPanel {
+    display: none;
+  }
+  .rightPanel {
+    flex: 1;   /* take full width */
+    height: 100vh;
+    padding: 20px;
+  }
+}
+/* 📱 Quote carousel adjustments on very small screens (<480px) */
+@media (max-width: 480px) {
+  .quoteCard {
+    padding: 15px;
+    max-width: 95%;
+  }
+  .quoteText {
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+}
+
+}
