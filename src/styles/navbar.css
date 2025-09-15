@@ -1,0 +1,63 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #0a74da;
+  color: white;
+  position: relative;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-links li a,
+.nav-links li button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-links li button:hover,
+.nav-links li a:hover {
+  text-decoration: underline;
+}
+
+/* Hamburger */
+.burger {
+  display: none;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.burger div {
+  width: 25px;
+  height: 3px;
+  background: white;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: #0a74da;
+    flex-direction: column;
+    width: 200px;
+    display: none;
+    padding: 1rem;
+    border-radius: 0 0 0 8px;
+  }
+  .nav-links.open {
+    display: flex;
+  }
+  .burger {
+    display: flex;
+  }
+}

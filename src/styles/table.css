@@ -1,0 +1,21 @@
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+
+.task-table th, .task-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.task-table th {
+  background: #0a74da;
+  color: white;
+}
+
+.task-table input {
+  width: 90%;
+  padding: 0.2rem;
+}
