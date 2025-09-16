@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import "./AssignTask.css";
+import "./Assigntask.css";
 
 export default function AssignTask() {
   const [form, setForm] = useState({
