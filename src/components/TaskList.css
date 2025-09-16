@@ -1,0 +1,98 @@
+.tasklist-container {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.tasklist-title {
+  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+.tasklist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tasklist-item {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s ease;
+}
+
+.tasklist-item:hover {
+  background: #f8faff;
+}
+
+.tasklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tasklist-meta {
+  font-size: 13px;
+  color: #555;
+  margin-top: 6px;
+}
+
+.tasklist-dates {
+  font-size: 12px;
+  color: #777;
+  margin-top: 4px;
+}
+
+/* --- Badges --- */
+.badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Status colors */
+.status-notstarted { background: #f8d7da; color: #721c24; }
+.status-inprogress { background: #e7f1ff; color: #0d6efd; }
+.status-onhold { background: #fff3cd; color: #856404; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f5c6cb; color: #721c24; }
+
+/* Priority colors */
+.priority-high { background: #f8d7da; color: #721c24; }
+.priority-medium { background: #fff3cd; color: #856404; }
+.priority-low { background: #d1ecf1; color: #0c5460; }
+.priority-urgent { background: #f5c6cb; color: #721c24; }
+
+/* Empty + Loading */
+.tasklist-loading {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 16px;
+  color: #555;
+}
+
+.tasklist-empty {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #666;
+  text-align: center;
+}
+
+/* 📱 Mobile */
+@media (max-width: 768px) {
+  .tasklist-item {
+    padding: 12px;
+  }
+  .tasklist-header strong {
+    font-size: 1rem;
+  }
+  .tasklist-meta, .tasklist-dates {
+    font-size: 12px;
+  }
+}

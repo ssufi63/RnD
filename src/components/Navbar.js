@@ -1,87 +1,88 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+// src/components/Navbar.js
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  FaTasks,
+  FaHome,
+  FaTachometerAlt,
+  FaUsers,
+  FaPlus,
+  FaSignOutAlt,
+  FaUserCircle,
+} from "react-icons/fa";
 import "./../styles/navbar.css";
 
-const Navbar = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+const Navbar = ({ user, role, userName, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchUserAndRole = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const currentUser = session?.user || null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", currentUser.id)
-          .single();
-
-        if (!error && data) setUserRole(data.role);
-      }
-    };
-
-    fetchUserAndRole();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
 
   return (
     <nav className="navbar">
-      {/* Left side */}
-      <div className="navbar-left">
-        <div className="logo">Task Manager</div>
+      {/* Logo */}
+      <div className="logo">
+        <FaTasks style={{ marginRight: "8px" }} />
+        Task Manager
+      </div>
 
-        {/* Burger */}
-        <div
-          className={`burger ${menuOpen ? "toggle" : ""}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <div className="line1"></div>
-          <div className="line2"></div>
-          <div className="line3"></div>
-        </div>
+      {/* Burger (mobile only) */}
+      <div
+        className={`burger ${menuOpen ? "toggle" : ""}`}
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <div className="line1"></div>
+        <div className="line2"></div>
+        <div className="line3"></div>
       </div>
 
       {/* Nav links */}
       <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
+        <li>
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            <FaHome /> Home
+          </Link>
+        </li>
+
         {user && (
-          <li>
-            <Link to="/summary" onClick={() => setMenuOpen(false)}>
-              Dashboard
-            </Link>
-          </li>
-        )}
-        {user && (
-          <li>
-            <Link to="/mytasks" onClick={() => setMenuOpen(false)}>
-              My Tasks
-            </Link>
-          </li>
-        )}
-        {user && (userRole === "admin" || userRole === "leader") && (
-          <li>
-            <Link to="/assigntasks" onClick={() => setMenuOpen(false)}>
-              Assign Tasks
-            </Link>
-          </li>
-        )}
-        {user && (
-          <li>
-            <button onClick={handleLogout}>Logout</button>
-          </li>
+          <>
+            <li>
+              <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
+                <FaTachometerAlt /> Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link to="/overview" onClick={() => setMenuOpen(false)}>
+                <FaUsers /> Overview
+              </Link>
+            </li>
+            {(role === "admin" || role === "leader") && (
+              <li>
+                <Link to="/assign" onClick={() => setMenuOpen(false)}>
+                  <FaPlus /> Assign Task
+                </Link>
+              </li>
+            )}
+            <li>
+              <Link to="/tasks" onClick={() => setMenuOpen(false)}>
+                <FaTasks /> My Tasks
+              </Link>
+            </li>
+            <li className="user-info">
+              <FaUserCircle size={20} />
+              <span>{userName || user.email}</span>
+              <button onClick={onLogout}>
+                <FaSignOutAlt /> Logout
+              </button>
+            </li>
+          </>
         )}
       </ul>
+
+      {/* Backdrop when menu is open */}
+      {menuOpen && (
+        <div
+          className="backdrop"
+          onClick={() => setMenuOpen(false)}
+        ></div>
+      )}
     </nav>
   );
 };

@@ -1,0 +1,148 @@
+.team-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: Inter, Arial, sans-serif;
+  padding: 0 10px;
+}
+.pageTitle {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #0d6efd;
+}
+
+/* Alphabet Index */
+.alphaIndex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+.alphaLetter {
+  font-size: 12px;
+  padding: 4px 6px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* User Section */
+.userSection {
+  margin-bottom: 40px;
+}
+.userCard {
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+}
+.userCard.expanded {
+  background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+}
+.userCardContent {
+  text-align: center;
+}
+.avatarLarge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #3730a3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0 auto 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.userName {
+  margin: 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+.userDept {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+.taskSummary {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Status Chips */
+.statusChips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.chip.status-completed { background: #dcfce7; color: #166534; }
+.chip.status-in-progress { background: #e0f2fe; color: #0369a1; }
+.chip.status-on-hold { background: #fef9c3; color: #854d0e; }
+.chip.status-cancelled { background: #fee2e2; color: #991b1b; }
+.chip.status-not-started { background: #f3f4f6; color: #374151; }
+
+/* Expanded Tasks */
+.gridWrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.taskCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  text-align: center;
+}
+.badgeRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+.badge {
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Badge Colors */
+.badge.product-ac { background: #dbeafe; color: #1e40af; }
+.badge.product-ref { background: #dcfce7; color: #166534; }
+.badge.product-mwo { background: #fef9c3; color: #92400e; }
+.badge.product-wp { background: #cffafe; color: #155e75; }
+.badge.product-cc { background: #ede9fe; color: #5b21b6; }
+
+.badge.priority-high { background: #fee2e2; color: #991b1b; }
+.badge.priority-medium { background: #fef9c3; color: #854d0e; }
+.badge.priority-low { background: #dcfce7; color: #166534; }
+.badge.priority-urgent { background: #ede9fe; color: #5b21b6; }
+
+.taskMeta {
+  font-size: 13px;
+  color: #374151;
+  margin: 4px 0;
+}
+.taskMetaSmall {
+  font-size: 12px;
+  color: #6b7280;
+}

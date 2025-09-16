@@ -1,16 +1,108 @@
-.dashboard-container {
-  padding: 2rem;
+.dashboard {
+  padding: 20px;
+  font-family: "Inter", Arial, sans-serif;
 }
 
-.dashboard-stats {
-  display: flex;
-  gap: 2rem;
-  margin-top: 1rem;
+.pageTitle {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #0d6efd;
 }
 
-.dashboard-stats div {
-  padding: 1rem;
-  background: #0a74da;
-  color: white;
+.roleText {
+  margin-bottom: 20px;
+  font-style: italic;
+  color: #555;
+}
+
+/* ✅ Table */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.taskTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.taskTable th,
+.taskTable td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.taskTable th {
+  background: #f9f9f9;
+  color: #333;
+  font-weight: 600;
+}
+
+.taskTable tr:hover {
+  background: #f1f9ff;
+}
+
+/* ✅ Buttons */
+.saveBtn,
+.addBtn {
+  padding: 8px 14px;
+  border: none;
   border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.saveBtn {
+  background: #20c997;
+  color: #fff;
+}
+
+.saveBtn:hover {
+  background: #17a589;
+}
+
+.addBtn {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  margin-top: 10px;
+}
+
+.addBtn:hover {
+  background: #0069d9;
+}
+
+/* ✅ Form */
+.formWrapper {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.taskForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.taskForm input,
+.taskForm select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  flex: 1 1 200px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 40px;
 }

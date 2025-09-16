@@ -1,15 +1,19 @@
+// src/pages/Home.js
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import "./Home.css"; // <-- import CSS file
+import "./Home.css";
 
 function Home() {
   const navigate = useNavigate();
 
+  // Disable scroll only on Home
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = "auto"; };
+    return () => {
+      document.body.style.overflow = "auto"; // restore
+    };
   }, []);
 
   const [loading, setLoading] = useState(true);
@@ -17,6 +21,7 @@ function Home() {
   const [quotes, setQuotes] = useState([]);
   const [quoteIndex, setQuoteIndex] = useState(0);
 
+  // Auth states
   const [activeTab, setActiveTab] = useState("login");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
@@ -33,6 +38,7 @@ function Home() {
   const [signupError, setSignupError] = useState("");
   const [signingUp, setSigningUp] = useState(false);
 
+  // Resolve current user
   const resolveCurrentUser = async () => {
     try {
       const { data } = await supabase.auth.getUser?.();
@@ -67,21 +73,23 @@ function Home() {
     };
   }, []);
 
+  // Fetch quotes after login
   useEffect(() => {
-    if (!user) return;
     const fetchQuotes = async () => {
       const { data } = await supabase.from("quotes").select("text").order("created_at", { ascending: true });
       if (Array.isArray(data)) setQuotes(data);
     };
-    fetchQuotes();
+    if (user) fetchQuotes();
   }, [user]);
 
+  // Rotate quotes
   useEffect(() => {
     if (!user || quotes.length === 0) return;
     const id = setInterval(() => setQuoteIndex((i) => (i + 1) % quotes.length), 5000);
     return () => clearInterval(id);
   }, [user, quotes]);
 
+  // Handlers
   const handleLoginChange = (e) =>
     setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
   const handleSignupChange = (e) =>
@@ -90,12 +98,8 @@ function Home() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError("");
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginForm.email,
-      password: loginForm.password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword(loginForm);
     if (error) return setLoginError(error.message);
-
     const role = data.user?.user_metadata?.role;
     navigate(role === "team_leader" ? "/dashboard" : "/tasks");
   };
@@ -110,11 +114,19 @@ function Home() {
     const { error } = await supabase.auth.signUp({
       email: signupForm.email,
       password: signupForm.password,
-      options: { data: signupForm },
+      options: {
+        data: {
+          first_name: signupForm.firstName,
+          last_name: signupForm.lastName,
+          full_name: `${signupForm.firstName} ${signupForm.lastName}`,
+          employee_id: signupForm.employeeId,
+          department: signupForm.department,
+          role: signupForm.role,
+        },
+      },
     });
     setSigningUp(false);
     if (error) return setSignupError(error.message);
-
     alert("Signup successful! Please check your email.");
     setActiveTab("login");
   };
