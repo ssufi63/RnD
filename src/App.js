@@ -127,7 +127,7 @@ function App() {
               <ProtectedRoute
                 user={user}
                 role={role}
-                allowedRoles={["admin", "leader", "team_leader", "manager"]} // ✅ expanded
+                allowedRoles={["admin", "team_leader", "manager"]} // ✅ expanded
               >
                 <AssignTask />
               </ProtectedRoute>
