@@ -121,18 +121,18 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/assign"
-            element={
-              <ProtectedRoute
-                user={user}
-                role={role}
-                allowedRoles={["admin", "team_leader", "manager"]} // ✅ expanded
-              >
-                <AssignTask />
-              </ProtectedRoute>
-            }
-          />
+    <Route
+  path="/assign"
+  element={
+    <ProtectedRoute
+      user={user}
+      role={role}
+      allowedRoles={["admin", "team_leader", "manager"]} // 👈 match DB values exactly
+    >
+      <AssignTask />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </div>
     </div>
