@@ -188,7 +188,7 @@ function Home() {
           <AnimatePresence mode="wait">
             {activeTab === "login" && (
               <motion.div key="login" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}>
-                <form className="form" onSubmit={handleLogin}>
+                <form className="form loginForm" onSubmit={handleLogin}>
                   <h2 className="formTitle">Login</h2>
                   {loginError && <p className="error">{loginError}</p>}
                   <input type="email" name="email" placeholder="Email" value={loginForm.email} onChange={handleLoginChange} required />
@@ -200,7 +200,7 @@ function Home() {
 
             {activeTab === "signup" && (
               <motion.div key="signup" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-                <form className="form" onSubmit={handleSignup}>
+                <form className="form formGrid" onSubmit={handleSignup}>
                   <h2 className="formTitle">Signup</h2>
                   {signupError && <p className="error">{signupError}</p>}
 

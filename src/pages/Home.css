@@ -1,4 +1,6 @@
-/* General */
+/* =========================
+   General / Loading
+   ========================= */
 .fullPage {
   height: 100vh;
   display: flex;
@@ -16,7 +18,9 @@
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* Logged-in */
+/* =========================
+   Logged-in (quotes)
+   ========================= */
 .loggedInWrap {
   height: 100vh;
   display: flex;
@@ -41,12 +45,15 @@
   font-style: italic;
 }
 
-/* Auth layout */
+/* =========================
+   Auth layout (desktop base)
+   ========================= */
 .authPage {
   display: flex;
   height: 93vh;
   font-family: Inter, Arial, sans-serif;
 }
+
 .leftPanel {
   flex: 1;
   background: linear-gradient(135deg, #007bff, #00c6ff);
@@ -70,11 +77,13 @@
   padding: 40px;
   background: #f9f9f9;
 }
+
 .tabsWrapper {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 .tab {
   padding: 10px 20px;
@@ -100,22 +109,39 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin: 0 auto;
+  width: min(980px, 92vw);            /* ✅ keeps card centered & tidy on wide screens */
 }
-.form { display: flex; flex-direction: column; gap: 15px; }
-.row { display: flex; gap: 15px; }
-.formTitle { text-align: center; color: #0d6efd; }
+
+/* ====== Shared form base (Login & Signup) ====== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+/* ====== Login form (always single-column) ====== */
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.loginForm input[type="email"],
+.loginForm input[type="password"],
+.loginForm .submitButton {
+  width: 100%;   /* full width */
+}
+
+.formTitle { text-align: center; color: #0d6efd; margin: 0 0 8px; }
 .error { color: red; text-align: center; }
 
 input {
-  flex: 1;
   height: 44px;
   padding: 8px 12px;
   font-size: 15px;
   border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-}
-input[type="email"], .row + input {
   width: 100%;
 }
 .submitButton {
@@ -129,15 +155,57 @@ input[type="email"], .row + input {
   width: 100%;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .authPage { flex-direction: column; }
-  .leftPanel { flex: none; height: 40vh; }
-  .rightPanel { flex: none; height: 60vh; padding: 20px; }
+/* ====== Signup grid ONLY (desktop) ======
+   Apply by adding className="form formGrid" to the Signup form */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
 }
+.formGrid .formTitle,
+.formGrid .submitButton,
+.formGrid > input[type="email"] {      /* Email field spans full width */
+  grid-column: 1 / -1;
+}
+.formGrid.loginForm > input[type="password"] {
+  grid-column: 1 / -1;
+}
+  
+/* Flatten .row so its children (the two inputs) become grid items */
+.formGrid .row { display: contents; }
+
+/* =========================
+   Responsive
+   ========================= */
+@media (max-width: 1024px) {
+  .content { width: min(840px, 94vw); }
+}
+
+@media (max-width: 768px) {
+  .authPage {
+    flex-direction: column;
+    height: calc(100vh - 0px);
+    justify-content: center;
+    align-items: center;
+  }
+  .leftPanel { display: none; }                 /* ✅ hide branding on phones/tablets */
+  .rightPanel {
+    flex: none;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .content {
+    width: min(520px, 94vw);
+    margin: 0 auto;
+  }
+  .formGrid { grid-template-columns: 1fr; }     /* ✅ stack fields on mobile */
+}
+
 @media (max-width: 480px) {
-  .row { flex-direction: column; }
-  .row input { width: 100%; }
-  .leftPanel { display: none; }
-  .rightPanel { flex: 1; height: 100vh; padding: 20px; }
+  input, .submitButton {
+    height: 42px;
+    font-size: 14px;
+  }
 }
