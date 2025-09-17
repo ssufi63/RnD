@@ -53,7 +53,7 @@ const Navbar = ({ user, role, userName, onLogout }) => {
                 <FaUsers /> Overview
               </Link>
             </li>
-            {(role === "admin" || role === "leader") && (
+            {(role === "admin" || role === "leader" || role === "team leader" || role === "manager") && (
               <li>
                 <Link to="/assign" onClick={() => setMenuOpen(false)}>
                   <FaPlus /> Assign Task
