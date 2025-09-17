@@ -213,7 +213,18 @@ function Home() {
 
                   <div className="row">
                     <input name="employeeId" placeholder="Employee ID" value={signupForm.employeeId} onChange={handleSignupChange} required />
-                    <input name="department" placeholder="Department" value={signupForm.department} onChange={handleSignupChange} required />
+                    <select
+    name="department"
+    value={signupForm.department}
+    onChange={handleSignupChange}
+    required
+  >
+    <option value="">Select Department</option>
+    <option value="R&D">R&D</option>
+    <option value="QA">QA</option>
+    <option value="PRD">PRD</option>
+    <option value="OP">OP</option>
+  </select>
                   </div>
 
                   <input type="email" name="email" placeholder="Email" value={signupForm.email} onChange={handleSignupChange} required />
