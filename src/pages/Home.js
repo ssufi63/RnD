@@ -4,7 +4,7 @@ import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "./Home.css";
-import "./Home.css?v=2";
+/* import "./Home.css?v=2"; */
 
 
 function Home() {

@@ -110,28 +110,17 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   margin: 0 auto;
-  width: min(980px, 92vw);            /* ✅ keeps card centered & tidy on wide screens */
+  width: min(980px, 92vw);
 }
 
-/* ====== Shared form base (Login & Signup) ====== */
+/* =========================
+   Shared form base
+   ========================= */
 .form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
-/* ====== Login form (always single-column) ====== */
-.loginForm {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.loginForm input[type="email"],
-.loginForm input[type="password"],
-.loginForm .submitButton {
-  width: 100%;   /* full width */
-}
-
 .formTitle { text-align: center; color: #0d6efd; margin: 0 0 8px; }
 .error { color: red; text-align: center; }
 
@@ -155,8 +144,23 @@ input {
   width: 100%;
 }
 
-/* ====== Signup grid ONLY (desktop) ======
-   Apply by adding className="form formGrid" to the Signup form */
+/* =========================
+   Login form (always single-column)
+   ========================= */
+.loginForm {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 15px;
+}
+.loginForm input,
+.loginForm .submitButton {
+  width: 100%;
+  grid-column: unset !important; /* ✅ override any grid inheritance */
+}
+
+/* =========================
+   Signup form (grid on desktop)
+   ========================= */
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -164,14 +168,9 @@ input {
 }
 .formGrid .formTitle,
 .formGrid .submitButton,
-.formGrid > input[type="email"] {      /* Email field spans full width */
+.formGrid > input[type="email"] {
   grid-column: 1 / -1;
 }
-.formGrid.loginForm > input[type="password"] {
-  grid-column: 1 / -1;
-}
-  
-/* Flatten .row so its children (the two inputs) become grid items */
 .formGrid .row { display: contents; }
 
 /* =========================
@@ -188,7 +187,7 @@ input {
     justify-content: center;
     align-items: center;
   }
-  .leftPanel { display: none; }                 /* ✅ hide branding on phones/tablets */
+  .leftPanel { display: none; }
   .rightPanel {
     flex: none;
     width: 100%;
@@ -200,7 +199,7 @@ input {
     width: min(520px, 94vw);
     margin: 0 auto;
   }
-  .formGrid { grid-template-columns: 1fr; }     /* ✅ stack fields on mobile */
+  .formGrid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
