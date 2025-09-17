@@ -32,18 +32,26 @@ function App() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+
       const currentUser = session?.user || null;
       setUser(currentUser);
 
       if (currentUser) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("role, full_name")
+        // ✅ Fetch from `user_with_role` view (created earlier)
+        const { data, error } = await supabase
+          .from("user_with_role")
+          .select("full_name, role")
           .eq("id", currentUser.id)
           .single();
 
-        setRole(data?.role || null);
-        setUserName(data?.full_name || currentUser.email || "");
+        if (!error && data) {
+          setRole(data.role || "user");
+          setUserName(data.full_name || currentUser.email || "");
+        } else {
+          console.error("Error fetching role:", error);
+          setRole("user");
+          setUserName(currentUser.email || "");
+        }
       } else {
         setRole(null);
         setUserName("");
@@ -51,10 +59,14 @@ function App() {
     };
 
     fetchUserAndRole();
+
     const { data: authListener } = supabase.auth.onAuthStateChange(() => {
       fetchUserAndRole();
     });
-    return () => authListener.subscription.unsubscribe();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -115,7 +127,7 @@ function App() {
               <ProtectedRoute
                 user={user}
                 role={role}
-                allowedRoles={["admin", "leader"]}
+                allowedRoles={["admin", "leader", "team_leader", "manager"]} // ✅ expanded
               >
                 <AssignTask />
               </ProtectedRoute>
