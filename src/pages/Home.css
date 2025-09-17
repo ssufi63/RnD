@@ -104,13 +104,16 @@
   font-weight: 600;
 }
 
+/* Fix right overflow issue */
 .content {
   padding: 20px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   margin: 0 auto;
-  width: min(980px, 92vw);
+  max-width: 980px;     /* ✅ Prevents overflow */
+  width: 100%;          /* ✅ Fit parent */
+  box-sizing: border-box;
 }
 
 /* =========================
