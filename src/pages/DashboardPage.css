@@ -43,6 +43,69 @@
   text-align: center;
 }
 
+/* 📊 Modal styles */
+.details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.details-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.details-content h3 {
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.details-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.details-content table th,
+.details-content table td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.details-content table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  text-align: left;
+}
+
+.close-btn {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.close-btn:hover {
+  background: #0b5ed7;
+}
+
 /* 📱 Tablet */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -51,6 +114,9 @@
   .dashboard-title {
     font-size: 1.6rem;
     text-align: center;
+  }
+  .details-content {
+    max-width: 95%;
   }
 }
 
@@ -80,7 +146,6 @@
     min-width: 400px; /* keep chart readable */
   }
 
-  /* Swipe hint (fade gradient on right) */
   .chart-scroll::after {
     content: "";
     position: absolute;

@@ -1,3 +1,4 @@
+/* Container */
 .taskForm-container {
   max-width: 900px;
   margin: 40px auto;
@@ -7,22 +8,33 @@
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
+/* Form */
 .taskForm {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+/* Rows */
 .formRow {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
 
-.formRow.full {
+/* Each field gets a min width so they align nicely */
+.formRow > div {
+  flex: 1 1 220px;
+  display: flex;
   flex-direction: column;
 }
 
+/* Full row (like textarea or long input) */
+.formRow.full > div {
+  flex: 1 1 100%;
+}
+
+/* Labels */
 label {
   font-weight: 600;
   font-size: 15px;
@@ -30,19 +42,28 @@ label {
   margin-bottom: 6px;
 }
 
-input, select {
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 12px;
-  font-size: 15px;
+/* Inputs */
+input,
+select {
+  height: 48px;
+  padding: 10px 12px;
+  font-size: 16px;
   border-radius: 8px;
   border: 1px solid #ccc;
   outline: none;
+  transition: border-color 0.2s ease;
   box-sizing: border-box;
 }
 
+input:focus,
+select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* Submit Button */
 .submitBtn {
-  padding: 12px 20px;
+  padding: 14px 20px;
   background: linear-gradient(135deg,#007bff,#00c6ff);
   color: #fff;
   border-radius: 10px;
@@ -50,16 +71,51 @@ input, select {
   font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: background 0.3s;
+  font-size: 16px;
+  transition: opacity 0.2s ease;
 }
 
 .submitBtn:hover {
-  background: linear-gradient(135deg,#0056b3,#0096c7);
+  opacity: 0.9;
 }
 
-/* 📱 Mobile */
+/* 📱 Tablet */
 @media (max-width: 768px) {
+  .taskForm-container {
+    margin: 20px;
+    padding: 20px;
+  }
+}
+
+/* 📱 Small phones */
+@media (max-width: 480px) {
   .formRow {
     flex-direction: column;
+  }
+
+  .formRow > div {
+    flex: 1 1 100%;
+  }
+
+  input,
+  select {
+    width: 100%;
+    font-size: 17px;
+    height: 52px;
+  }
+
+  .submitBtn {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    height: 56px;
+    font-size: 18px;
+    z-index: 1000;
+  }
+
+  .taskForm {
+    padding-bottom: 70px; /* prevent button overlap */
   }
 }

@@ -9,6 +9,7 @@ import {
   FaPlus,
   FaSignOutAlt,
   FaUserCircle,
+  FaProjectDiagram,
 } from "react-icons/fa";
 import "./../styles/navbar.css";
 
@@ -57,6 +58,13 @@ const Navbar = ({ user, role, userName, onLogout }) => {
   <li>
     <Link to="/assign" onClick={() => setMenuOpen(false)}>
       <FaPlus /> Assign Task
+    </Link>
+  </li>
+)}
+{(role === "admin" /* || role === "team_leader" || role === "manager" */) && (
+  <li>
+    <Link to="/projects" onClick={() => setMenuOpen(false)}>
+      <FaProjectDiagram /> projects
     </Link>
   </li>
 )}

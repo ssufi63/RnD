@@ -28,17 +28,28 @@ export default function AssignTask() {
     ],
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, department, role")
-        .neq("role", "admin");
-      if (error) console.error("Error loading users:", error);
-      else setUsers(data || []);
-    };
-    fetchUsers();
-  }, []);
+useEffect(() => {
+  const fetchUsers = async () => {
+    // get the logged in user first
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error("Error fetching logged in user:", userError);
+      return;
+    }
+    const loggedInUserId = userData.user.id;
+
+    // fetch all users except the logged in one
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, department")
+      .neq("id", loggedInUserId); // exclude logged-in user
+
+    if (error) console.error("Error loading users:", error);
+    else setUsers(data || []);
+  };
+
+  fetchUsers();
+}, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

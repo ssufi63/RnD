@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
+
 // Pages & Components
 import Home from "./pages/Home";
 import Dashboard from "./components/Dashboard";
@@ -12,6 +13,7 @@ import AllTasks from "./pages/AllTasks";
 import DashboardPage from "./pages/DashboardPage";
 import TeamOverview from "./components/TeamOverview";
 import Navbar from "./components/Navbar"; // ✅ use external navbar
+import ProjectBoard from "./components/ProjectBoard";
 
 // ✅ ProtectedRoute wrapper
 const ProtectedRoute = ({ user, role, allowedRoles, children }) => {
@@ -130,6 +132,18 @@ function App() {
       allowedRoles={["admin", "team_leader", "manager"]} // 👈 match DB values exactly
     >
       <AssignTask />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/projects"
+  element={
+    <ProtectedRoute
+      user={user}
+      role={role}
+      allowedRoles={["admin", /* "team_leader", "manager" */]}
+    >
+      <ProjectBoard role={role} />
     </ProtectedRoute>
   }
 />

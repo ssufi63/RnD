@@ -10,6 +10,8 @@ import "./DashboardPage.css";
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState([]);
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  const [detailTitle, setDetailTitle] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -58,6 +60,12 @@ export default function DashboardPage() {
   const statuses = [...new Set(tasks.map((t) => t.status || "Unknown"))];
   const COLORS = ["#0088FE","#00C49F","#FFBB28","#FF8042","#6f42c1","#dc3545","#20c997"];
 
+  // --- handler ---
+  const showTasks = (filterFn, title) => {
+    setSelectedTasks(tasks.filter(filterFn));
+    setDetailTitle(title);
+  };
+
   return (
     <div className="dashboard-container">
       <h1 className="dashboard-title">Dashboard</h1>
@@ -74,8 +82,16 @@ export default function DashboardPage() {
           <div className="chart-scroll">
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={byStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}
-                  label={({ name, value }) => `${name}: ${value}`}>
+                <Pie
+                  data={byStatus}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%" cy="50%" outerRadius={90}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  onClick={(data) =>
+                    showTasks(t => (t.status || "Unknown") === data.name, `Tasks with Status: ${data.name}`)
+                  }
+                >
                   {byStatus.map((entry, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
@@ -94,7 +110,13 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" /><YAxis allowDecimals={false} />
                 <Tooltip /><Legend />
-                <Bar dataKey="count" fill="#0d6efd">
+                <Bar
+                  dataKey="count"
+                  fill="#0d6efd"
+                  onClick={(data) =>
+                    showTasks(t => (t.product || "Unknown") === data.name, `Tasks for Product: ${data.name}`)
+                  }
+                >
                   {byProduct.map((entry, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
@@ -109,8 +131,16 @@ export default function DashboardPage() {
           <div className="chart-scroll">
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={byPriority} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90}
-                  label={({ name, value }) => `${name}: ${value}`}>
+                <Pie
+                  data={byPriority}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%" cy="50%" innerRadius={50} outerRadius={90}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  onClick={(data) =>
+                    showTasks(t => (t.priority || "Unknown") === data.name, `Tasks with Priority: ${data.name}`)
+                  }
+                >
                   {byPriority.map((entry, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
@@ -129,7 +159,19 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" /><YAxis allowDecimals={false} />
                 <Tooltip /><Legend />
-                <Line type="monotone" dataKey="count" stroke="#00C49F" strokeWidth={2} dot={{ r: 4 }} />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#00C49F"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  onClick={(data) =>
+                    showTasks(
+                      t => new Date(t.created_at).toLocaleDateString("en-CA") === data.date,
+                      `Tasks on ${data.date}`
+                    )
+                  }
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -144,13 +186,60 @@ export default function DashboardPage() {
                 <XAxis dataKey="department" /><YAxis allowDecimals={false} />
                 <Tooltip /><Legend />
                 {statuses.map((st, i) => (
-                  <Bar key={st} dataKey={st} stackId="a" fill={COLORS[i % COLORS.length]} />
+                  <Bar
+                    key={st}
+                    dataKey={st}
+                    stackId="a"
+                    fill={COLORS[i % COLORS.length]}
+                    onClick={(data) =>
+                      showTasks(
+                        t =>
+                          (t.department || "Unknown") === data.department &&
+                          (t.status || "Unknown") === st,
+                        `Tasks in ${data.department} with Status: ${st}`
+                      )
+                    }
+                  />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
       </div>
+
+      {/* Details Modal */}
+      {selectedTasks.length > 0 && (
+        <div className="details-modal">
+          <div className="details-content">
+            <h3>{detailTitle}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Product</th>
+                  <th>Priority</th>
+                  <th>Department</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedTasks.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.task_title || "(No title)"}</td>
+                    <td>{t.status}</td>
+                    <td>{t.product}</td>
+                    <td>{t.priority}</td>
+                    <td>{t.department}</td>
+                    <td>{new Date(t.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button className="close-btn" onClick={() => setSelectedTasks([])}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
