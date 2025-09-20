@@ -4,8 +4,6 @@ import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "./Home.css";
-/* import "./Home.css?v=2"; */
-
 
 function Home() {
   const navigate = useNavigate();
@@ -39,6 +37,19 @@ function Home() {
   });
   const [signupError, setSignupError] = useState("");
   const [signingUp, setSigningUp] = useState(false);
+
+  // Forgot Password
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+
+  // Change Email Modal
+  const [showChangeEmailModal, setShowChangeEmailModal] = useState(false);
+  const [existingEmail, setExistingEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newEmail1, setNewEmail1] = useState("");
+  const [newEmail2, setNewEmail2] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [changing, setChanging] = useState(false);
 
   // Resolve current user
   const resolveCurrentUser = async () => {
@@ -78,7 +89,10 @@ function Home() {
   // Fetch quotes after login
   useEffect(() => {
     const fetchQuotes = async () => {
-      const { data } = await supabase.from("quotes").select("text").order("created_at", { ascending: true });
+      const { data } = await supabase
+        .from("quotes")
+        .select("text")
+        .order("created_at", { ascending: true });
       if (Array.isArray(data)) setQuotes(data);
     };
     if (user) fetchQuotes();
@@ -87,7 +101,10 @@ function Home() {
   // Rotate quotes
   useEffect(() => {
     if (!user || quotes.length === 0) return;
-    const id = setInterval(() => setQuoteIndex((i) => (i + 1) % quotes.length), 5000);
+    const id = setInterval(
+      () => setQuoteIndex((i) => (i + 1) % quotes.length),
+      5000
+    );
     return () => clearInterval(id);
   }, [user, quotes]);
 
@@ -133,6 +150,50 @@ function Home() {
     setActiveTab("login");
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetMessage("");
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: window.location.origin + "/reset",
+    });
+    if (error) return setResetMessage(error.message);
+    setResetMessage("Password reset email sent! Please check your inbox.");
+  };
+
+  const handleChangeEmailModal = async (e) => {
+    e.preventDefault();
+    setModalMessage("");
+
+    if (newEmail1 !== newEmail2) {
+      return setModalMessage("❌ New email addresses do not match.");
+    }
+
+    setChanging(true);
+
+    // Step 1: Verify user credentials
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: existingEmail,
+      password: currentPassword,
+    });
+
+    if (loginError) {
+      setChanging(false);
+      return setModalMessage("❌ Invalid existing email or password.");
+    }
+
+    // Step 2: Update email
+    const { error } = await supabase.auth.updateUser({ email: newEmail1 });
+    setChanging(false);
+
+    if (error) {
+      return setModalMessage("❌ " + error.message);
+    }
+
+    setModalMessage(
+      "✅ Email change requested. Please check your new inbox to confirm."
+    );
+  };
+
   if (loading) {
     return (
       <div className="fullPage">
@@ -166,8 +227,12 @@ function Home() {
     <div className="authPage">
       <div className="leftPanel">
         <h1 className="brand">Task Manager</h1>
-        <p className="tagline">“The secret of getting ahead is getting started.”</p>
-        <p className="footer">© {new Date().getFullYear()} RFL Electronics Ltd.</p>
+        <p className="tagline">
+          “The secret of getting ahead is getting started.”
+        </p>
+        <p className="footer">
+          © {new Date().getFullYear()} RFL Electronics Ltd.
+        </p>
       </div>
 
       <div className="rightPanel">
@@ -189,60 +254,226 @@ function Home() {
         <div className="content">
           <AnimatePresence mode="wait">
             {activeTab === "login" && (
-              <motion.div key="login" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}>
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30 }}
+              >
                 <form className="form loginForm" onSubmit={handleLogin}>
                   <h2 className="formTitle">Login</h2>
                   {loginError && <p className="error">{loginError}</p>}
-                  <input type="email" name="email" placeholder="Email" value={loginForm.email} onChange={handleLoginChange} required />
-                  <input type="password" name="password" placeholder="Password" value={loginForm.password} onChange={handleLoginChange} required />
-                  <button type="submit" className="submitButton">Login</button>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={loginForm.email}
+                    onChange={handleLoginChange}
+                    required
+                  />
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    value={loginForm.password}
+                    onChange={handleLoginChange}
+                    required
+                  />
+                  <button type="submit" className="submitButton">
+                    Login
+                  </button>
+                  <div className="extraLinks">
+                    <span
+                      className="forgotLink"
+                      onClick={() => setActiveTab("forgot")}
+                    >
+                      Forgot Password?
+                    </span>
+                    <span
+                      className="forgotLink"
+                      onClick={() => setShowChangeEmailModal(true)}
+                    >
+                      Change Email
+                    </span>
+                  </div>
                 </form>
               </motion.div>
             )}
 
             {activeTab === "signup" && (
-              <motion.div key="signup" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+              <motion.div
+                key="signup"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+              >
                 <form className="form formGrid" onSubmit={handleSignup}>
                   <h2 className="formTitle">Signup</h2>
                   {signupError && <p className="error">{signupError}</p>}
 
                   <div className="row">
-                    <input name="firstName" placeholder="First Name" value={signupForm.firstName} onChange={handleSignupChange} required />
-                    <input name="lastName" placeholder="Last Name" value={signupForm.lastName} onChange={handleSignupChange} required />
+                    <input
+                      name="firstName"
+                      placeholder="First Name"
+                      value={signupForm.firstName}
+                      onChange={handleSignupChange}
+                      required
+                    />
+                    <input
+                      name="lastName"
+                      placeholder="Last Name"
+                      value={signupForm.lastName}
+                      onChange={handleSignupChange}
+                      required
+                    />
                   </div>
 
                   <div className="row">
-                    <input name="employeeId" placeholder="Employee ID" value={signupForm.employeeId} onChange={handleSignupChange} required />
+                    <input
+                      name="employeeId"
+                      placeholder="Employee ID"
+                      value={signupForm.employeeId}
+                      onChange={handleSignupChange}
+                      required
+                    />
                     <select
-    name="department"
-    value={signupForm.department}
-    onChange={handleSignupChange}
-    required
-  >
-    <option value="">Select Department</option>
-    <option value="R&D">R&D</option>
-    <option value="QA">QA</option>
-    <option value="PRD">PRD</option>
-    <option value="OP">OP</option>
-  </select>
+                      name="department"
+                      value={signupForm.department}
+                      onChange={handleSignupChange}
+                      required
+                    >
+                      <option value="">Select Department</option>
+                      <option value="R&D">R&D</option>
+                      <option value="QA">QA</option>
+                      <option value="PRD">PRD</option>
+                      <option value="OP">OP</option>
+                    </select>
                   </div>
 
-                  <input type="email" name="email" placeholder="Email" value={signupForm.email} onChange={handleSignupChange} required />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={signupForm.email}
+                    onChange={handleSignupChange}
+                    required
+                  />
 
                   <div className="row">
-                    <input type="password" name="password" placeholder="Password" value={signupForm.password} onChange={handleSignupChange} required />
-                    <input type="password" name="confirmPassword" placeholder="Confirm Password" value={signupForm.confirmPassword} onChange={handleSignupChange} required />
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Password"
+                      value={signupForm.password}
+                      onChange={handleSignupChange}
+                      required
+                    />
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="Confirm Password"
+                      value={signupForm.confirmPassword}
+                      onChange={handleSignupChange}
+                      required
+                    />
                   </div>
 
-                  <button type="submit" className="submitButton" disabled={signingUp}>
+                  <button
+                    type="submit"
+                    className="submitButton"
+                    disabled={signingUp}
+                  >
                     {signingUp ? "Signing Up..." : "Sign Up"}
                   </button>
+                </form>
+              </motion.div>
+            )}
+
+            {activeTab === "forgot" && (
+              <motion.div
+                key="forgot"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+              >
+                <form className="form" onSubmit={handleForgotPassword}>
+                  <h2 className="formTitle">Reset Password</h2>
+                  {resetMessage && <p className="info">{resetMessage}</p>}
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                  />
+                  <button type="submit" className="submitButton">
+                    Send Reset Link
+                  </button>
+                  <p
+                    className="forgotLink"
+                    onClick={() => setActiveTab("login")}
+                  >
+                    ← Back to Login
+                  </p>
                 </form>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Change Email Modal */}
+      {showChangeEmailModal && (
+        <div className="modalOverlay">
+          <div className="modalBox">
+            <h2 className="formTitle">Change Email</h2>
+            {modalMessage && (
+              <p className={modalMessage.startsWith("✅") ? "info" : "error"}>
+                {modalMessage}
+              </p>
+            )}
+            <form className="form" onSubmit={handleChangeEmailModal}>
+              <input
+                type="email"
+                placeholder="Existing Email"
+                value={existingEmail}
+                onChange={(e) => setExistingEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Current Password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+              <input
+                type="email"
+                placeholder="New Email"
+                value={newEmail1}
+                onChange={(e) => setNewEmail1(e.target.value)}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Confirm New Email"
+                value={newEmail2}
+                onChange={(e) => setNewEmail2(e.target.value)}
+                required
+              />
+              <button type="submit" className="submitButton" disabled={changing}>
+                {changing ? "Processing..." : "Update Email"}
+              </button>
+            </form>
+            <p
+              className="forgotLink"
+              onClick={() => setShowChangeEmailModal(false)}
+            >
+              ✖ Close
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

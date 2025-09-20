@@ -14,6 +14,7 @@ import DashboardPage from "./pages/DashboardPage";
 import TeamOverview from "./components/TeamOverview";
 import Navbar from "./components/Navbar"; // ✅ use external navbar
 import ProjectBoard from "./components/ProjectBoard";
+import Reset from "./pages/Reset";
 
 // ✅ ProtectedRoute wrapper
 const ProtectedRoute = ({ user, role, allowedRoles, children }) => {
@@ -91,6 +92,7 @@ function App() {
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <Routes>
           <Route path="/" element={<Home />} />
+           <Route path="/reset" element={<Reset />} />
           <Route
             path="/overview"
             element={
