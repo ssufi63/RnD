@@ -17,7 +17,7 @@ export default function TaskForm({ onTaskCreated }) {
     remarks: ""
   });
 
-  const [leaders, setLeaders] = useState([]);
+  /* const [leaders, setLeaders] = useState([]); */
   const [loading, setLoading] = useState(false);
 
   const dropdownOptions = {
@@ -26,7 +26,7 @@ export default function TaskForm({ onTaskCreated }) {
     priority: ["High", "Medium", "Low", "Urgent"],
     task_type: [
       "Development","Prototyping","Testing","Documentation","Analysis",
-      "Experimentation","Design","Cost Optimization","Innovation","New Model","Mold repair"
+      "Experimentation","Design","Cost Optimization","Innovation","New Model", "Mold Repair"
     ],
     static_assigned_by: [
       "R&D Head","ED Sir","FH Sir","Sazibul","Ashraful",
@@ -34,7 +34,7 @@ export default function TaskForm({ onTaskCreated }) {
     ]
   };
 
-  useEffect(() => {
+/*   useEffect(() => {
     const fetchLeaders = async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -44,7 +44,7 @@ export default function TaskForm({ onTaskCreated }) {
       if (!error && data) setLeaders(data);
     };
     fetchLeaders();
-  }, []);
+  }, []); */
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -168,11 +168,11 @@ export default function TaskForm({ onTaskCreated }) {
             <label>Assigned By</label>
             <select name="assigned_by" value={form.assigned_by} onChange={handleChange} required>
               <option value="">Select Assigner</option>
-              {leaders.map((leader) => (
+             {/*  {leaders.map((leader) => (
                 <option key={leader.id} value={leader.id}>
                   {leader.full_name} ({leader.role})
                 </option>
-              ))}
+              ))} */}
               {dropdownOptions.static_assigned_by.map((txt) => (
                 <option key={txt} value={txt}>{txt}</option>
               ))}

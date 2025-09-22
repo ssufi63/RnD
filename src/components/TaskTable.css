@@ -1,8 +1,13 @@
+/* ============================
+   GRID (exactly 3 cards/row)
+   ============================ */
 .gridWrapper {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-  padding: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* force 3 */
+  gap: 32px;
+  padding: 28px;
+  max-width: 1200px;     /* ~3 x 360–380px cards */
+  margin: 0 auto;        /* center the grid */
   transition: filter 0.3s ease;
 }
 .gridWrapper.blurred {
@@ -10,60 +15,166 @@
   pointer-events: none;
 }
 
+/* ============================
+   CARD BASE
+   ============================ */
 .card {
-  border: 1px solid #e0e0e0;
-  border-radius: 14px;
-  padding: 18px;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-radius: 20px;
+  padding: 24px;
+  min-height: 360px;           /* gives room for all fixed sections */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transition: transform .25s ease, box-shadow .25s ease;
   cursor: pointer;
-  transition: all 0.3s ease;
 }
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
 }
 
+/* Status-based backgrounds / accents */
+.card.status-completed   { background: linear-gradient(135deg,#d4f8e8,#ffffff); border-left: 6px solid #28a745; }
+.card.status-in-progress { background: linear-gradient(135deg,#e7f1ff,#ffffff); border-left: 6px solid #0d6efd; }
+.card.status-on-hold     { background: linear-gradient(135deg,#fff4e5,#ffffff); border-left: 6px solid #d28a00; }
+.card.status-cancelled   { background: linear-gradient(135deg,#ffe3e3,#ffffff); border-left: 6px solid #d32f2f; }
+.card.overdueCard        { background: linear-gradient(135deg,#ffe6e6,#ffffff); border-left: 6px solid #ff0000; }
+
+/* ============================
+   TITLE (fixed height + clamp)
+   ============================ */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Set exact height so rows below align */
+.cardTitle {
+  height: 58px;                 /* ≈ 2 lines at 22px/1.3 */
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+}
+.cardTitle strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;        /* show up to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pending pill */
+.pendingTag {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.1);
+  color: #333;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ============================
+   BADGE ROW (green line)
+   ============================ */
+/* Fixed height so the next section always starts at same Y */
 .badgeRow {
   display: flex;
-  justify-content: center;
   gap: 10px;
-  margin: 12px 0;
   flex-wrap: wrap;
+  align-items: center;
+  margin: 0 0 14px 0;
+  height: 40px;                 /* <- key: fixed */
 }
+
 .badge {
-  padding: 5px 12px;
-  border-radius: 50px;
+  padding: 6px 12px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  text-align: center;
-  min-width: 70px;
-  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
+
+/* Product colors */
+.badge.product-ac { background:#e6f0ff; color:#0048c4; }
+.badge.product-ref { background:#e8fff1; color:#1a7f37; }
+.badge.product-mwo { background:#fff3cd; color:#856404; }
+.badge.product-wp  { background:#e0f7fa; color:#00838f; }
+.badge.product-cc  { background:#f3e8ff; color:#6f42c1; }
+
+/* Priority colors */
+.badge.priority-high   { background:#ffe3e3; color:#d32f2f; }
+.badge.priority-medium { background:#fff6d6; color:#c79200; }
+.badge.priority-low    { background:#e5f8e8; color:#2e7d32; }
+.badge.priority-urgent { background:#f3e6ff; color:#6f42c1; }
+
+/* ============================
+   DATES (red line)
+   ============================ */
+/* Fixed height so ‘Assigned By’ line is consistent too */
+.dateRow {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* vertically center within fixed box */
+  gap: 6px;
+  margin: 0 0 14px 0;
+  height: 52px;                 /* <- key: fixed */
+}
+.dateRow span {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.2;
+}
+.dateRow .deadline { font-weight: 600; color: #d32f2f; }
+
+/* ============================
+   ASSIGNED BY (fixed height)
+   ============================ */
+/* ✅ Assigned By */
 .assignedBy {
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  color: #555;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  margin-top: auto;        /* pushes to bottom */
+  height: auto;            /* remove fixed height */
+  display: flex;
+  align-items: center;
 }
 
-/* ✅ Badge colors */
-.badge.product-ac { background: #007bff; }
-.badge.product-ref { background: #28a745; }
-.badge.product-mwo { background: #ffc107; color: #000; }
-.badge.product-wp  { background: #17a2b8; }
-.badge.product-cc  { background: #6f42c1; }
 
-.badge.status-not-started { background: #6c757d; }
-.badge.status-in-progress { background: #17a2b8; }
-.badge.status-on-hold     { background: #ffc107; color: #000; }
-.badge.status-completed   { background: #28a745; }
-.badge.status-cancelled   { background: #dc3545; }
+/* ============================
+   PROGRESS BAR (uniform bottom)
+   ============================ */
+.progressBar {
+  width: 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: #f1f1f1;
+  margin-top: 14px;
+  overflow: hidden;
+}
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0d6efd, #20c997);
+  transition: width 0.6s ease;
+}
+.progressBarFill.overdue {
+  background: linear-gradient(90deg, #ff4d4f, #d32f2f);
+}
 
-.badge.priority-high   { background: #dc3545; }
-.badge.priority-medium { background: #ffc107; color: #000; }
-.badge.priority-low    { background: #28a745; }
-.badge.priority-urgent { background: #6f42c1; }
-
-/* Modal */
+/* ============================
+   MODAL & FORM (UNCHANGED)
+   ============================ */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -111,13 +222,15 @@
   margin-top: 6px;
   color: #0d6efd;
 }
-.form input, .form select {
+.form input,
+.form select {
   padding: 10px 12px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
 }
 
+/* Form Buttons */
 .buttonRow {
   grid-column: 1 / -1;
   display: flex;
@@ -139,5 +252,158 @@
   font-size: 15px;
   transition: opacity 0.2s ease;
 }
+/* ============================
+   GRID (responsive: 3→2→1)
+   ============================ */
+.gridWrapper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  padding: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: filter 0.3s ease;
+}
+.gridWrapper.blurred {
+  filter: blur(5px);
+  pointer-events: none;
+}
+@media (max-width: 1024px) {
+  .gridWrapper { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .gridWrapper { grid-template-columns: 1fr; }
+}
+
+/* ============================
+   VIEW TOGGLE
+   ============================ */
+.viewToggle {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 28px 0;
+  gap: 8px;
+}
+.viewToggle button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background: #fff;
+  font-size: 14px;
+}
+.viewToggle button.active {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+/* ============================
+   CARD BASE
+   ============================ */
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transition: transform .25s ease, box-shadow .25s ease;
+  cursor: pointer;
+}
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+}
+.card.status-completed   { background: linear-gradient(135deg,#d4f8e8,#ffffff); border-left: 6px solid #28a745; }
+.card.status-in-progress { background: linear-gradient(135deg,#e7f1ff,#ffffff); border-left: 6px solid #0d6efd; }
+.card.status-on-hold     { background: linear-gradient(135deg,#fff4e5,#ffffff); border-left: 6px solid #d28a00; }
+.card.status-cancelled   { background: linear-gradient(135deg,#ffe3e3,#ffffff); border-left: 6px solid #d32f2f; }
+.card.overdueCard        { background: linear-gradient(135deg,#ffe6e6,#ffffff); border-left: 6px solid #ff0000; }
+
+/* Title */
+.cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.cardTitle { height: 58px; overflow: hidden; display: flex; align-items: flex-start; }
+.cardTitle strong {
+  font-size: 22px; font-weight: 700; color: #222; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Pending pill */
+.pendingTag {
+  font-size: 12px; padding: 4px 10px; background: #fff3cd; color: #856404;
+  border: 1px solid #ffeeba; border-radius: 999px; font-weight: 600; white-space: nowrap;
+}
+
+/* Badges */
+.badgeRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 14px 0; height: 40px; }
+.badge { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.badge.product-ac { background:#e6f0ff; color:#0048c4; }
+.badge.product-ref { background:#e8fff1; color:#1a7f37; }
+.badge.product-mwo { background:#fff3cd; color:#856404; }
+.badge.product-wp  { background:#e0f7fa; color:#00838f; }
+.badge.product-cc  { background:#f3e8ff; color:#6f42c1; }
+.badge.priority-high   { background:#ffe3e3; color:#d32f2f; }
+.badge.priority-medium { background:#fff6d6; color:#c79200; }
+.badge.priority-low    { background:#e5f8e8; color:#2e7d32; }
+.badge.priority-urgent { background:#f3e6ff; color:#6f42c1; }
+
+/* Dates */
+.dateRow { display: flex; flex-direction: column; justify-content: center; gap: 6px; margin: 0 0 14px 0; height: 52px; }
+.dateRow span { font-size: 14px; color: #444; line-height: 1.2; }
+.dateRow .deadline { font-weight: 600; color: #d32f2f; }
+
+/* Assigned by */
+.assignedBy { font-size: 14px; color: #555; padding-top: 10px; border-top: 1px solid #eee; margin-top: auto; display: flex; align-items: center; }
+
+/* Progress bar */
+.progressBar { width: 100%; height: 6px; border-radius: 6px; background: #f1f1f1; margin-top: 14px; overflow: hidden; }
+.progressBarFill { height: 100%; background: linear-gradient(90deg, #0d6efd, #20c997); transition: width 0.6s ease; }
+.progressBarFill.overdue { background: linear-gradient(90deg, #ff4d4f, #d32f2f); }
+
+/* ============================
+   TABLE VIEW
+   ============================ */
+   .taskTable th:first-child,
+.taskTable td:first-child {
+  width: 50px;
+  text-align: center;
+  font-weight: 600;
+}
+.taskTable { width: 100%; border-collapse: collapse; margin: 20px auto; font-size: 14px; max-width: 1200px; }
+.taskTable th, .taskTable td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+.taskTable th { background: #f5f5f5; font-weight: 600; }
+.taskTable tr:hover { background: #f0f8ff; cursor: pointer; }
+.taskTable tr.row-completed { background: #e6ffe9; }
+.taskTable tr.row-cancelled { background: #ffecec; }
+
+/* ============================
+   MODAL & FORM
+   ============================ */
+.modalOverlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(3px); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modalContent {
+  background: #fff; border-radius: 14px; padding: 24px; width: 92%; max-width: 760px; max-height: 90vh;
+  overflow-y: auto; box-shadow: 0 12px 30px rgba(0,0,0,0.25); position: relative;
+}
+.modalHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.closeX { background: transparent; border: none; font-size: 28px; line-height: 1; cursor: pointer; }
+.closeX:hover { color: #d32f2f; transform: scale(1.1); }
+
+/* Form */
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form label { font-weight: 600; font-size: 14px; margin-top: 6px; color: #0d6efd; position: relative; }
+/* Required star */
+.form label.required::after {
+  content: "*"; position: absolute; top: 0; right: -10px; color: red; font-size: 16px; font-weight: bold;
+}
+.form input, .form select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+
+/* Buttons */
+.buttonRow { grid-column: 1 / -1; display: flex; gap: 12px; margin-top: 16px; position: sticky; bottom: 0; background: #fff; padding-top: 10px; }
+.actionBtn { flex: 1; padding: 12px; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: opacity 0.2s ease; }
+.actionBtn.save { background: #28a745; }
+.actionBtn.cancel { background: #dc3545; }
+
 .actionBtn.save { background: #28a745; }
 .actionBtn.cancel { background: #dc3545; }
