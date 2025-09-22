@@ -26,7 +26,7 @@ export default function TaskForm({ onTaskCreated }) {
     priority: ["High", "Medium", "Low", "Urgent"],
     task_type: [
       "Development","Prototyping","Testing","Documentation","Analysis",
-      "Experimentation","Design","Cost Optimization","Innovation","New Model"
+      "Experimentation","Design","Cost Optimization","Innovation","New Model","Mold repair"
     ],
     static_assigned_by: [
       "R&D Head","ED Sir","FH Sir","Sazibul","Ashraful",
