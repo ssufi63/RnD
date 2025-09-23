@@ -1,78 +1,133 @@
-/* ============================
-   GRID (exactly 3 cards/row)
-   ============================ */
-.gridWrapper {
+/* ======================================
+   TASK BOARD BASE
+   ====================================== */
+.taskBoard { 
+  box-sizing: border-box; 
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ======================================
+   GRID LAYOUT (3 → 2 → 1)
+   ====================================== */
+.taskBoard .gridWrapper {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* force 3 */
+  grid-template-columns: repeat(3, 1fr) !important; /* desktop: 3 */
   gap: 32px;
   padding: 28px;
-  max-width: 1200px;     /* ~3 x 360–380px cards */
-  margin: 0 auto;        /* center the grid */
+  max-width: 1200px;
+  margin: 0 auto;
   transition: filter 0.3s ease;
 }
-.gridWrapper.blurred {
+
+.taskBoard .gridWrapper.blurred {
   filter: blur(5px);
   pointer-events: none;
 }
 
-/* ============================
+/* Tablet: 2 columns */
+@media (max-width: 1024px) {
+  .taskBoard .gridWrapper {
+    grid-template-columns: repeat(2, 1fr) !important;
+    max-width: 800px;
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 640px) {
+  .taskBoard .gridWrapper {
+    grid-template-columns: 1fr !important;
+    max-width: 520px;
+  }
+  .taskBoard .card {
+    min-height: auto;        /* let content grow */
+    padding-bottom: 90px;    /* leave room for accent & Assigned By */
+  }
+  .taskBoard .dateRow {
+    margin-bottom: 60px;     /* smaller gap for mobile */
+  }
+}
+
+/* ======================================
    CARD BASE
-   ============================ */
-.card {
+   ====================================== */
+.taskBoard .card {
+  position: relative;
   background: #fff;
   border-radius: 20px;
   padding: 24px;
-  min-height: 360px;           /* gives room for all fixed sections */
+  min-width: 280px;           /* support small screens */
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   transition: transform .25s ease, box-shadow .25s ease;
   cursor: pointer;
+  overflow: hidden;
 }
-.card:hover {
+
+.taskBoard .card:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 12px 36px rgba(0,0,0,0.18);
 }
 
-/* Status-based backgrounds / accents */
-.card.status-completed   { background: linear-gradient(135deg,#d4f8e8,#ffffff); border-left: 6px solid #28a745; }
-.card.status-in-progress { background: linear-gradient(135deg,#e7f1ff,#ffffff); border-left: 6px solid #0d6efd; }
-.card.status-on-hold     { background: linear-gradient(135deg,#fff4e5,#ffffff); border-left: 6px solid #d28a00; }
-.card.status-cancelled   { background: linear-gradient(135deg,#ffe3e3,#ffffff); border-left: 6px solid #d32f2f; }
-.card.overdueCard        { background: linear-gradient(135deg,#ffe6e6,#ffffff); border-left: 6px solid #ff0000; }
-
-/* ============================
-   TITLE (fixed height + clamp)
-   ============================ */
-.cardHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+/* Bottom Curved Accent */
+.taskBoard .card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: transparent;
+  border-top-right-radius: 80px;
+  z-index: 0;
+  transition: background 0.3s ease;
 }
 
-/* Set exact height so rows below align */
-.cardTitle {
-  height: 58px;                 /* ≈ 2 lines at 22px/1.3 */
-  overflow: hidden;
-  display: flex;
-  align-items: flex-start;
+/* Ensure content above accent */
+.taskBoard .card * {
+  position: relative;
+  z-index: 1;
 }
-.cardTitle strong {
+
+/* Status Colors for Accent */
+.taskBoard .card.status-completed::after    { background: #28a745; }
+.taskBoard .card.status-in-progress::after  { background: #0d6efd; }
+.taskBoard .card.status-on-hold::after      { background: #d28a00; }
+.taskBoard .card.status-cancelled::after    { background: #d32f2f; }
+.taskBoard .card.status-not-started::after  { background: #6c757d; }
+.taskBoard .card.overdueCard::after         { background: #ff0000; }
+
+/* ======================================
+   TITLE
+   ====================================== */
+.taskBoard .cardHeader { 
+  display: flex; 
+  justify-content: space-between; 
+  gap: 12px; 
+  margin-bottom: 12px; 
+}
+
+.taskBoard .cardTitle { 
+  height: 58px; 
+  overflow: hidden; 
+  display: flex; 
+  align-items: flex-start; 
+}
+
+.taskBoard .cardTitle strong {
   font-size: 22px;
   font-weight: 700;
   color: #222;
   line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 2;        /* show up to 2 lines */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Pending pill */
-.pendingTag {
+.taskBoard .pendingTag {
   font-size: 12px;
   padding: 4px 10px;
   background: rgba(0,0,0,0.1);
@@ -82,328 +137,237 @@
   white-space: nowrap;
 }
 
-/* ============================
-   BADGE ROW (green line)
-   ============================ */
-/* Fixed height so the next section always starts at same Y */
-.badgeRow {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin: 0 0 14px 0;
-  height: 40px;                 /* <- key: fixed */
-}
-
-.badge {
-  padding: 6px 12px;
-  border-radius: 999px;
+/* ======================================
+   BADGES (Modern Style)
+   ====================================== */
+.taskBoard .badge {
+  display: inline-block;
+  padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
+  border-radius: 999px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  line-height: 1;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  backdrop-filter: blur(4px);
 }
 
-/* Product colors */
-.badge.product-ac { background:#e6f0ff; color:#0048c4; }
-.badge.product-ref { background:#e8fff1; color:#1a7f37; }
-.badge.product-mwo { background:#fff3cd; color:#856404; }
-.badge.product-wp  { background:#e0f7fa; color:#00838f; }
-.badge.product-cc  { background:#f3e8ff; color:#6f42c1; }
-
-/* Priority colors */
-.badge.priority-high   { background:#ffe3e3; color:#d32f2f; }
-.badge.priority-medium { background:#fff6d6; color:#c79200; }
-.badge.priority-low    { background:#e5f8e8; color:#2e7d32; }
-.badge.priority-urgent { background:#f3e6ff; color:#6f42c1; }
-
-/* ============================
-   DATES (red line)
-   ============================ */
-/* Fixed height so ‘Assigned By’ line is consistent too */
-.dateRow {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;      /* vertically center within fixed box */
-  gap: 6px;
-  margin: 0 0 14px 0;
-  height: 52px;                 /* <- key: fixed */
-}
-.dateRow span {
-  font-size: 14px;
-  color: #444;
-  line-height: 1.2;
-}
-.dateRow .deadline { font-weight: 600; color: #d32f2f; }
-
-/* ============================
-   ASSIGNED BY (fixed height)
-   ============================ */
-/* ✅ Assigned By */
-.assignedBy {
-  font-size: 14px;
-  color: #555;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-  margin-top: auto;        /* pushes to bottom */
-  height: auto;            /* remove fixed height */
-  display: flex;
-  align-items: center;
-}
-
-
-/* ============================
-   PROGRESS BAR (uniform bottom)
-   ============================ */
-.progressBar {
-  width: 100%;
-  height: 6px;
-  border-radius: 6px;
-  background: #f1f1f1;
-  margin-top: 14px;
-  overflow: hidden;
-}
-.progressBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #0d6efd, #20c997);
-  transition: width 0.6s ease;
-}
-.progressBarFill.overdue {
-  background: linear-gradient(90deg, #ff4d4f, #d32f2f);
-}
-
-/* ============================
-   MODAL & FORM (UNCHANGED)
-   ============================ */
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0,0,0,0.4);
-  backdrop-filter: blur(3px);
+.taskBoard .badgeRow {
   display: flex;
   justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-.modalContent {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px;
-  width: 92%;
-  max-width: 760px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-  position: relative;
-}
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.closeX {
-  background: transparent;
-  border: none;
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-/* Form */
-.form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.form label {
-  font-weight: 600;
-  font-size: 14px;
-  margin-top: 6px;
-  color: #0d6efd;
-}
-.form input,
-.form select {
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Form Buttons */
-.buttonRow {
-  grid-column: 1 / -1;
-  display: flex;
   gap: 12px;
-  margin-top: 16px;
-  position: sticky;
-  bottom: 0;
-  background: #fff;
-  padding-top: 10px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  margin-bottom: 24px;
+  height: auto;
 }
-.actionBtn {
-  flex: 1;
-  padding: 12px;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+
+/* Hover Effect */
+.taskBoard .badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* Product Badges */
+.taskBoard .badge.product-ac   { background: rgba(13,110,253,0.1);  color: #0d6efd; }
+.taskBoard .badge.product-ref  { background: rgba(25,135,84,0.1);   color: #198754; }
+.taskBoard .badge.product-mwo  { background: rgba(255,193,7,0.15);  color: #d28a00; }
+.taskBoard .badge.product-wp   { background: rgba(13,202,240,0.15); color: #0aa2c0; }
+.taskBoard .badge.product-cc   { background: rgba(111,66,193,0.12); color: #6f42c1; }
+
+/* Priority Badges */
+.taskBoard .badge.priority-high    { background: rgba(220,53,69,0.12);  color: #dc3545; }
+.taskBoard .badge.priority-medium  { background: rgba(255,193,7,0.15);  color: #d28a00; }
+.taskBoard .badge.priority-low     { background: rgba(25,135,84,0.12);  color: #198754; }
+.taskBoard .badge.priority-urgent  { background: rgba(111,66,193,0.12); color: #6f42c1; }
+
+/* Status Badges */
+.taskBoard .badge.status-completed    { background: rgba(25,135,84,0.12);  color: #198754; }
+.taskBoard .badge.status-in-progress  { background: rgba(13,110,253,0.12); color: #0d6efd; }
+.taskBoard .badge.status-on-hold      { background: rgba(255,193,7,0.15);  color: #d28a00; }
+.taskBoard .badge.status-cancelled    { background: rgba(220,53,69,0.12);  color: #dc3545; }
+.taskBoard .badge.status-not-started  { background: rgba(108,117,125,0.12);color: #6c757d; }
+.taskBoard .badge.status-overdue      { background: rgba(255,0,0,0.12);   color: #ff0000; }
+
+/* ======================================
+   DATES
+   ====================================== */
+.taskBoard .dateRow {
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+  margin-top: auto; 
+  margin-bottom: 100px; 
+  text-align: center; 
+}
+
+.taskBoard .dateRow span { 
+  font-size: 14px; 
+  color: #444; 
+  line-height: 1.4; 
+}
+
+.taskBoard .dateRow .deadline { 
+  font-weight: 600; 
+  color: #d32f2f; 
+}
+
+/* ======================================
+   ASSIGNED BY
+   ====================================== */
+.taskBoard .assignedBy {
   font-size: 15px;
-  transition: opacity 0.2s ease;
-}
-/* ============================
-   GRID (responsive: 3→2→1)
-   ============================ */
-.gridWrapper {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
-  padding: 28px;
-  max-width: 1200px;
-  margin: 0 auto;
-  transition: filter 0.3s ease;
-}
-.gridWrapper.blurred {
-  filter: blur(5px);
-  pointer-events: none;
-}
-@media (max-width: 1024px) {
-  .gridWrapper { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-  .gridWrapper { grid-template-columns: 1fr; }
-}
-
-/* ============================
-   VIEW TOGGLE
-   ============================ */
-.viewToggle {
-  display: flex;
-  justify-content: flex-end;
-  margin: 12px 28px 0;
-  gap: 8px;
-}
-.viewToggle button {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  background: #fff;
-  font-size: 14px;
-}
-.viewToggle button.active {
-  background: #0d6efd;
+  font-weight: 700;
+  font-family: "Segoe UI", Arial, sans-serif;
   color: #fff;
-  border-color: #0d6efd;
+  position: absolute;
+  bottom: 2px;
+  left: 65px;
+  z-index: 2;
+  border-top: none;
+  padding: 8px 0 6px;
 }
 
-/* ============================
-   CARD BASE
-   ============================ */
-.card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 24px;
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  transition: transform .25s ease, box-shadow .25s ease;
-  cursor: pointer;
-}
-.card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
-}
-.card.status-completed   { background: linear-gradient(135deg,#d4f8e8,#ffffff); border-left: 6px solid #28a745; }
-.card.status-in-progress { background: linear-gradient(135deg,#e7f1ff,#ffffff); border-left: 6px solid #0d6efd; }
-.card.status-on-hold     { background: linear-gradient(135deg,#fff4e5,#ffffff); border-left: 6px solid #d28a00; }
-.card.status-cancelled   { background: linear-gradient(135deg,#ffe3e3,#ffffff); border-left: 6px solid #d32f2f; }
-.card.overdueCard        { background: linear-gradient(135deg,#ffe6e6,#ffffff); border-left: 6px solid #ff0000; }
-
-/* Title */
-.cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.cardTitle { height: 58px; overflow: hidden; display: flex; align-items: flex-start; }
-.cardTitle strong {
-  font-size: 22px; font-weight: 700; color: #222; line-height: 1.3;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+/* ======================================
+   MODAL & FORM
+   ====================================== */
+.modalOverlay { 
+  position: fixed; 
+  inset: 0; 
+  background-color: rgba(0,0,0,0.4); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 999; 
 }
 
-/* Pending pill */
-.pendingTag {
-  font-size: 12px; padding: 4px 10px; background: #fff3cd; color: #856404;
-  border: 1px solid #ffeeba; border-radius: 999px; font-weight: 600; white-space: nowrap;
+.modalContent { 
+  background: #fff; 
+  border-radius: 14px; 
+  padding: 24px; 
+  width: 92%; 
+  max-width: 760px; 
+  max-height: 90vh; 
+  overflow-y: auto; 
 }
 
-/* Badges */
-.badgeRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 14px 0; height: 40px; }
-.badge { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-.badge.product-ac { background:#e6f0ff; color:#0048c4; }
-.badge.product-ref { background:#e8fff1; color:#1a7f37; }
-.badge.product-mwo { background:#fff3cd; color:#856404; }
-.badge.product-wp  { background:#e0f7fa; color:#00838f; }
-.badge.product-cc  { background:#f3e8ff; color:#6f42c1; }
-.badge.priority-high   { background:#ffe3e3; color:#d32f2f; }
-.badge.priority-medium { background:#fff6d6; color:#c79200; }
-.badge.priority-low    { background:#e5f8e8; color:#2e7d32; }
-.badge.priority-urgent { background:#f3e6ff; color:#6f42c1; }
+.modalHeader { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 16px; 
+}
 
-/* Dates */
-.dateRow { display: flex; flex-direction: column; justify-content: center; gap: 6px; margin: 0 0 14px 0; height: 52px; }
-.dateRow span { font-size: 14px; color: #444; line-height: 1.2; }
-.dateRow .deadline { font-weight: 600; color: #d32f2f; }
+.closeX { 
+  background: transparent; 
+  border: none; 
+  font-size: 28px; 
+  cursor: pointer; 
+}
 
-/* Assigned by */
-.assignedBy { font-size: 14px; color: #555; padding-top: 10px; border-top: 1px solid #eee; margin-top: auto; display: flex; align-items: center; }
+.form { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 14px; 
+}
 
-/* Progress bar */
-.progressBar { width: 100%; height: 6px; border-radius: 6px; background: #f1f1f1; margin-top: 14px; overflow: hidden; }
-.progressBarFill { height: 100%; background: linear-gradient(90deg, #0d6efd, #20c997); transition: width 0.6s ease; }
-.progressBarFill.overdue { background: linear-gradient(90deg, #ff4d4f, #d32f2f); }
+.form label { 
+  font-weight: 600; 
+  font-size: 14px; 
+  color: #0d6efd; 
+}
 
-/* ============================
+.form label.required::after { 
+  content: "*"; 
+  color: red; 
+  font-size: 16px; 
+  font-weight: bold; 
+  margin-left: 2px; 
+}
+
+.form input, 
+.form select { 
+  padding: 10px 12px; 
+  border: 1px solid #ccc; 
+  border-radius: 8px; 
+  font-size: 14px; 
+}
+
+.buttonRow { 
+  grid-column: 1 / -1; 
+  display: flex; 
+  gap: 12px; 
+  margin-top: 16px; 
+}
+
+.actionBtn { 
+  flex: 1; 
+  padding: 12px; 
+  color: #fff; 
+  border: none; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 600; 
+  font-size: 15px; 
+}
+
+.actionBtn.save   { background: #28a745; }
+.actionBtn.cancel { background: #dc3545; }
+
+/* ======================================
+   VIEW TOGGLE
+   ====================================== */
+.viewToggle { 
+  display: flex; 
+  justify-content: flex-end; 
+  margin: 12px 28px 0; 
+  gap: 8px; 
+}
+
+.viewToggle button { 
+  padding: 6px 12px; 
+  border-radius: 6px; 
+  border: 1px solid #ccc; 
+  background: #fff; 
+  cursor: pointer; 
+}
+
+.viewToggle button.active { 
+  background: #0d6efd; 
+  color: #fff; 
+}
+
+/* ======================================
    TABLE VIEW
-   ============================ */
-   .taskTable th:first-child,
-.taskTable td:first-child {
-  width: 50px;
-  text-align: center;
-  font-weight: 600;
+   ====================================== */
+.taskTableWrapper { width: 100%; overflow-x: auto; }
+
+.taskTable { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin: 20px auto; 
+  font-size: 14px; 
+  max-width: 1200px; 
+  min-width: 800px; 
 }
-.taskTable { width: 100%; border-collapse: collapse; margin: 20px auto; font-size: 14px; max-width: 1200px; }
-.taskTable th, .taskTable td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-.taskTable th { background: #f5f5f5; font-weight: 600; }
-.taskTable tr:hover { background: #f0f8ff; cursor: pointer; }
+
+.taskTable th, 
+.taskTable td { 
+  border: 1px solid #ddd; 
+  padding: 8px 12px; 
+  text-align: left; 
+}
+
+.taskTable th { 
+  background: #f5f5f5; 
+  font-weight: 600; 
+}
+
+.taskTable tr:hover { 
+  background: #f0f8ff; 
+  cursor: pointer; 
+}
+
 .taskTable tr.row-completed { background: #e6ffe9; }
 .taskTable tr.row-cancelled { background: #ffecec; }
-
-/* ============================
-   MODAL & FORM
-   ============================ */
-.modalOverlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(3px); display: flex; justify-content: center; align-items: center; z-index: 999; }
-.modalContent {
-  background: #fff; border-radius: 14px; padding: 24px; width: 92%; max-width: 760px; max-height: 90vh;
-  overflow-y: auto; box-shadow: 0 12px 30px rgba(0,0,0,0.25); position: relative;
-}
-.modalHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.closeX { background: transparent; border: none; font-size: 28px; line-height: 1; cursor: pointer; }
-.closeX:hover { color: #d32f2f; transform: scale(1.1); }
-
-/* Form */
-.form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form label { font-weight: 600; font-size: 14px; margin-top: 6px; color: #0d6efd; position: relative; }
-/* Required star */
-.form label.required::after {
-  content: "*"; position: absolute; top: 0; right: -10px; color: red; font-size: 16px; font-weight: bold;
-}
-.form input, .form select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-
-/* Buttons */
-.buttonRow { grid-column: 1 / -1; display: flex; gap: 12px; margin-top: 16px; position: sticky; bottom: 0; background: #fff; padding-top: 10px; }
-.actionBtn { flex: 1; padding: 12px; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: opacity 0.2s ease; }
-.actionBtn.save { background: #28a745; }
-.actionBtn.cancel { background: #dc3545; }
-
-.actionBtn.save { background: #28a745; }
-.actionBtn.cancel { background: #dc3545; }

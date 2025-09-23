@@ -42,6 +42,13 @@ function Reset() {
           onChange={(e) => setNewPassword(e.target.value)}
           required
         />
+                <input
+          type="password"
+          placeholder="Confirm New Password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+        />
         <button type="submit" className="submitButton" disabled={loading}>
           {loading ? "Updating..." : "Update Password"}
         </button>

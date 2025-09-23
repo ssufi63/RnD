@@ -44,12 +44,14 @@ function TaskCard({ task, onClick, hasPending }) {
   const progress = calcProgress(task);
   const overdue = isOverdue(task);
 
+  // status-* class for CSS
+  const statusClass = task.status
+    ? `status-${task.status.toLowerCase().replace(/\s+/g, "-")}`
+    : "";
+
   return (
     <div
-      className={`card 
-        ${task.status === "Completed" ? "completed" : ""} 
-        ${task.status === "Cancelled" ? "cancelled" : ""} 
-        ${overdue ? "overdueCard" : ""}`}
+      className={`card ${statusClass} ${overdue ? "overdueCard" : ""}`}
       onClick={() => onClick(task)}
       role="button"
       tabIndex={0}
@@ -94,42 +96,44 @@ function TaskCard({ task, onClick, hasPending }) {
 
 function TaskTableView({ tasks, onEditClick }) {
   return (
-    <table className="taskTable">
-      <thead>
-        <tr>
-          <th>S/N</th> {/* Serial column */}
-          <th>Title</th>
-          <th>Product</th>
-          <th>Status</th>
-          <th>Priority</th>
-          <th>Task Type</th>
-          <th>Start Date</th>
-          <th>Deadline</th>
-          <th>Completion</th>
-          <th>Assigned By</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tasks.map((task,idx) => (
-          <tr
-            key={task.id}
-            onClick={() => onEditClick(task)}
-            className={`row-${(task.status || "").toLowerCase().replace(/\s+/g, "-")}`}
-          >
-            <td>{idx + 1}</td> {/* Serial starts at 1 */}
-            <td>{task.task_title ?? task.title ?? "(Untitled)"}</td>
-            <td>{task.product || "-"}</td>
-            <td>{task.status || "-"}</td>
-            <td>{task.priority || "-"}</td>
-            <td>{task.task_type || "-"}</td>
-            <td>{fmtDateForInput(task.start_date)}</td>
-            <td>{fmtDateForInput(task.deadline)}</td>
-            <td>{fmtDateForInput(task.completion_date)}</td>
-            <td>{task.assigned_by_label || task.assigned_by || "-"}</td>
+    <div className="taskTableWrapper">
+      <table className="taskTable">
+        <thead>
+          <tr>
+            <th>S/N</th>
+            <th>Title</th>
+            <th>Product</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Task Type</th>
+            <th>Start Date</th>
+            <th>Deadline</th>
+            <th>Completion</th>
+            <th>Assigned By</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {tasks.map((task, idx) => (
+            <tr
+              key={task.id}
+              onClick={() => onEditClick(task)}
+              className={`row-${(task.status || "").toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <td>{idx + 1}</td>
+              <td>{task.task_title ?? task.title ?? "(Untitled)"}</td>
+              <td>{task.product || "-"}</td>
+              <td>{task.status || "-"}</td>
+              <td>{task.priority || "-"}</td>
+              <td>{task.task_type || "-"}</td>
+              <td>{fmtDateForInput(task.start_date)}</td>
+              <td>{fmtDateForInput(task.deadline)}</td>
+              <td>{fmtDateForInput(task.completion_date)}</td>
+              <td>{task.assigned_by_label || task.assigned_by || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -144,8 +148,8 @@ function EditTaskModal({ form, setForm, onCancel, onSave, task, dropdownOptions 
   };
 
   const datesChanged =
-    (form.start_date !== fmtDateForInput(task?.start_date)) ||
-    (form.deadline !== fmtDateForInput(task?.deadline));
+    form.start_date !== fmtDateForInput(task?.start_date) ||
+    form.deadline !== fmtDateForInput(task?.deadline);
 
   return (
     <div className="modalOverlay" onClick={onCancel}>
@@ -155,7 +159,6 @@ function EditTaskModal({ form, setForm, onCancel, onSave, task, dropdownOptions 
           <button className="closeX" onClick={onCancel}>×</button>
         </div>
 
-        {/* Use submit so HTML5 `required` works */}
         <form
           className="form"
           onSubmit={(e) => {
@@ -296,13 +299,11 @@ export default function TaskTable() {
   const [form, setForm] = useState({});
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState("member");
-  const [viewMode, setViewMode] = useState("card"); // "card" | "table"
+  const [viewMode, setViewMode] = useState("card");
 
-  /* -------------------- auth + role -------------------- */
   useEffect(() => {
     const initAuth = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) return;
+      const { data } = await supabase.auth.getSession();
       const uid = data?.session?.user?.id || null;
       setUserId(uid);
 
@@ -318,24 +319,22 @@ export default function TaskTable() {
     initAuth();
   }, []);
 
-  /* -------------------- fetch tasks -------------------- */
   useEffect(() => {
     const fetchTasks = async () => {
       if (!userId) return;
       setLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("tasks")
         .select("*")
         .or(`created_by.eq.${userId},assigned_to.eq.${userId}`)
-        .order("deadline", { ascending: true, nullsFirst: false })
+        .order("deadline", { ascending: true })
         .order("created_at", { ascending: false });
-      if (!error) setTasks(data || []);
+      setTasks(data || []);
       setLoading(false);
     };
     fetchTasks();
   }, [userId]);
 
-  /* -------------------- fetch pending requests -------------------- */
   useEffect(() => {
     const fetchPending = async () => {
       if (!userId) return;
@@ -346,8 +345,8 @@ export default function TaskTable() {
 
       if (userRole === "member") query = query.eq("requested_by", userId);
 
-      const { data, error } = await query;
-      if (!error && data) {
+      const { data } = await query;
+      if (data) {
         const map = {};
         data.forEach((r) => (map[r.task_id] = true));
         setPendingMap(map);
@@ -356,7 +355,6 @@ export default function TaskTable() {
     fetchPending();
   }, [userId, userRole]);
 
-  /* -------------------- edit handling -------------------- */
   const handleEditClick = (task) => {
     setEditingTaskId(task.id);
     setForm({
@@ -405,18 +403,15 @@ export default function TaskTable() {
 
     const origStart = fmtDateForInput(originalTask.start_date);
     const origDeadl = fmtDateForInput(originalTask.deadline);
-    const hasDateChange =
-      form.start_date !== origStart || form.deadline !== origDeadl;
+    const hasDateChange = form.start_date !== origStart || form.deadline !== origDeadl;
 
-    // Require reason if dates changed
     if (hasDateChange && !form.date_change_reason?.trim()) {
       alert('Please provide a reason in "Why changed the date?"');
       return;
     }
 
-    // Members must request approval; leaders/managers/admins can edit directly
     if (hasDateChange && !["team_leader","manager","admin"].includes(userRole)) {
-      const { error } = await supabase.from("task_date_change_requests").insert({
+      await supabase.from("task_date_change_requests").insert({
         task_id: editingTaskId,
         old_start_date: originalTask.start_date,
         old_deadline: originalTask.deadline,
@@ -425,53 +420,40 @@ export default function TaskTable() {
         reason: form.date_change_reason,
         status: "Pending"
       });
-      if (error) alert("Error submitting change request: " + error.message);
-      else alert("Request submitted for approval.");
+      alert("Request submitted for approval.");
       handleCancel();
       return;
     }
 
-    // Direct update
-    const { error } = await supabase.from("tasks").update(updates).eq("id", editingTaskId);
-    if (error) {
-      alert("Error updating task: " + error.message);
-      return;
-    }
-
+    await supabase.from("tasks").update(updates).eq("id", editingTaskId);
     setTasks((prev) => prev.map((t) => (t.id === editingTaskId ? { ...t, ...updates } : t)));
     handleCancel();
   };
 
-  /* -------------------- memoized sort -------------------- */
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
-      // Completed & Cancelled go to the bottom
       const isDoneA = a.status === "Completed" || a.status === "Cancelled";
       const isDoneB = b.status === "Completed" || b.status === "Cancelled";
       if (isDoneA && !isDoneB) return 1;
       if (!isDoneA && isDoneB) return -1;
 
-      // Among active tasks, sort by deadline (soonest first)
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
       const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
       if (da !== db) return da - db;
 
-      // Fallback: most recently created first
       const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
       const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
       return cb - ca;
     });
   }, [tasks]);
 
-  /* -------------------- render -------------------- */
   if (loading) return <p>Loading tasks...</p>;
   if (!sortedTasks.length) return <p style={{ textAlign: "center" }}>No tasks found</p>;
 
   const currentTask = tasks.find((t) => t.id === editingTaskId);
 
   return (
-    <>
-      {/* View toggle */}
+    <div className="taskBoard">{/* <-- wrapper to namespace CSS and boost specificity */}
       <div className="viewToggle">
         <button
           className={viewMode === "card" ? "active" : ""}
@@ -489,7 +471,6 @@ export default function TaskTable() {
         </button>
       </div>
 
-      {/* Content */}
       {viewMode === "card" ? (
         <div className={`gridWrapper ${editingTaskId ? "blurred" : ""}`}>
           {sortedTasks.map((task) => (
@@ -505,7 +486,6 @@ export default function TaskTable() {
         <TaskTableView tasks={sortedTasks} onEditClick={handleEditClick} />
       )}
 
-      {/* Modal */}
       {editingTaskId && (
         <EditTaskModal
           form={form}
@@ -516,6 +496,6 @@ export default function TaskTable() {
           dropdownOptions={dropdownOptions}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -15,6 +15,7 @@ import TeamOverview from "./components/TeamOverview";
 import Navbar from "./components/Navbar"; // ✅ use external navbar
 import ProjectBoard from "./components/ProjectBoard";
 import Reset from "./pages/Reset";
+import DateChangeRequests from "./components/DateChangeRequests";
 
 // ✅ ProtectedRoute wrapper
 const ProtectedRoute = ({ user, role, allowedRoles, children }) => {
@@ -137,7 +138,20 @@ function App() {
     </ProtectedRoute>
   }
 />
+    <Route
+  path="/change request"
+  element={
+    <ProtectedRoute
+      user={user}
+      role={role}
+      allowedRoles={["admin", "team_leader", "manager"]} // 👈 match DB values exactly
+    >
+      <DateChangeRequests/>
+    </ProtectedRoute>
+  }
+/>
 <Route
+
   path="/projects"
   element={
     <ProtectedRoute

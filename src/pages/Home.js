@@ -150,49 +150,55 @@ function Home() {
     setActiveTab("login");
   };
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setResetMessage("");
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: window.location.origin + "/reset",
-    });
-    if (error) return setResetMessage(error.message);
-    setResetMessage("Password reset email sent! Please check your inbox.");
-  };
+const handleForgotPassword = async (e) => {
+  e.preventDefault();
+  setResetMessage("");
+  const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+    redirectTo: window.location.origin + "/reset",
+  });
+  if (error) return setResetMessage(error.message);
 
-  const handleChangeEmailModal = async (e) => {
-    e.preventDefault();
-    setModalMessage("");
+  // ✅ Always show this generic success message
+  setResetMessage("If this email is registered, a password reset link has been sent.");
+};
 
-    if (newEmail1 !== newEmail2) {
-      return setModalMessage("❌ New email addresses do not match.");
-    }
 
-    setChanging(true);
+const handleChangeEmailModal = async (e) => {
+  e.preventDefault();
+  setModalMessage("");
 
-    // Step 1: Verify user credentials
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: existingEmail,
-      password: currentPassword,
-    });
+  if (newEmail1 !== newEmail2) {
+    return setModalMessage("❌ New email addresses do not match.");
+  }
 
-    if (loginError) {
-      setChanging(false);
-      return setModalMessage("❌ Invalid existing email or password.");
-    }
+  setChanging(true);
 
-    // Step 2: Update email
-    const { error } = await supabase.auth.updateUser({ email: newEmail1 });
+  // Step 1: Verify user credentials
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email: existingEmail,
+    password: currentPassword,
+  });
+
+  if (loginError) {
     setChanging(false);
+    return setModalMessage("❌ Invalid existing email or password.");
+  }
 
-    if (error) {
-      return setModalMessage("❌ " + error.message);
-    }
+  // Step 2: Update email
+  const { error } = await supabase.auth.updateUser({ email: newEmail1 });
+  setChanging(false);
 
-    setModalMessage(
-      "✅ Email change requested. Please check your new inbox to confirm."
-    );
-  };
+  if (error) {
+    // ✅ Generic safe error, no matter what Supabase tells us
+    return setModalMessage("❌ Could not update email. Please try again.");
+  }
+
+  // ✅ Safe success message
+  setModalMessage(
+    "✅ If this new email is valid, a confirmation link has been sent. Please check your inbox."
+  );
+};
+
 
   if (loading) {
     return (

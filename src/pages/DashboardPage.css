@@ -1,21 +1,92 @@
+:root {
+  --bg: #f9fafc;
+  --card-bg: #fff;
+  --text: #212529;
+  --subtext: #333;
+  --border: #ddd;
+  --metric: #0d6efd;
+  --modal-bg: #fff;
+  --modal-overlay: rgba(0,0,0,0.6);
+}
+
+body[data-theme="dark"] {
+  --bg: #121212;
+  --card-bg: #1e1e1e;
+  --text: #f1f1f1;
+  --subtext: #ccc;
+  --border: #444;
+  --metric: #63e6be;
+  --modal-bg: #1e1e1e;
+  --modal-overlay: rgba(0,0,0,0.8);
+}
+
+/* --- Container --- */
 .dashboard-container {
   padding: 20px;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
 }
 
-.dashboard-title {
+/* --- Header --- */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+}
+.dashboard-title {
   font-size: 2rem;
   font-weight: 700;
+  color: var(--text);
+}
+.theme-toggle {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: var(--metric);
+  color: #fff;
 }
 
+/* --- Tabs --- */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text);
+}
+.tab-btn.active {
+  background: var(--metric);
+  color: #fff;
+  border-color: var(--metric);
+}
+
+/* --- Grid --- */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
+@media (max-width: 1024px) {
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
 
+/* --- Cards --- */
 .dashboard-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   padding: 16px;
@@ -23,42 +94,38 @@
   flex-direction: column;
   justify-content: center;
 }
-
 .dashboard-card h3 {
   margin-bottom: 10px;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--subtext);
 }
-
 .dashboard-metric-title {
-  margin: 0;
-  font-size: 1.5rem;
   text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--subtext);
 }
-
 .dashboard-metric {
   font-size: 40px;
   font-weight: 700;
-  color: #0d6efd;
+  color: var(--metric);
   text-align: center;
 }
 
-/* 📊 Modal styles */
+/* --- Modal --- */
 .details-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
-
 .details-content {
-  background: #fff;
+  background: var(--modal-bg);
   padding: 20px;
   border-radius: 12px;
   max-width: 900px;
@@ -66,94 +133,109 @@
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  position: relative;
 }
-
 .details-content h3 {
   margin-bottom: 15px;
   font-size: 1.3rem;
+  color: var(--text);
 }
-
 .details-content table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
 }
-
 .details-content table th,
 .details-content table td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   padding: 8px 10px;
   font-size: 0.9rem;
+  color: var(--text);
 }
-
 .details-content table th {
-  background: #f8f9fa;
+  background: var(--card-bg);
   font-weight: 600;
   text-align: left;
 }
-
-.close-btn {
-  background: #0d6efd;
-  color: #fff;
+.close-icon {
+  position: sticky;
+  top: 0;
+  float: right;
+  background: transparent;
   border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
+  font-size: 1.2rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  color: var(--text);
 }
 
-.close-btn:hover {
-  background: #0b5ed7;
+/* --- User Dropdown (react-select) --- */
+.user-select {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;        /* center row */
+}
+.user-select label {
+  font-weight: 500;
+  color: var(--text);
+}
+.user-dropdown {
+  width: 100%;
+  max-width: 720px;               /* 👈 bigger */
 }
 
-/* 📱 Tablet */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 15px;
-  }
-  .dashboard-title {
-    font-size: 1.6rem;
-    text-align: center;
-  }
-  .details-content {
-    max-width: 95%;
-  }
+/* make the control & input stretch full width */
+.react-select__control {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  min-height: 44px;
+  font-size: 0.95rem;
+  padding-left: 8px;
+  width: 100%;
+}
+.react-select__value-container {
+  padding: 2px 8px !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+}
+.react-select__input-container {
+  flex: 1 1 100% !important;      /* 👈 stretch input */
+  min-width: 180px !important;
+}
+/* Fix selected value text color in react-select */
+.react-select__single-value {
+  color: var(--text) !important;
+  font-size: 0.95rem;
 }
 
-/* 📱 Mobile with horizontal scroll for charts */
-@media (max-width: 480px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr; /* stack all cards */
-    gap: 16px;
-  }
+.react-select__placeholder {
+  color: var(--subtext) !important;
+  font-size: 0.95rem;
+}
 
-  .dashboard-card {
-    padding: 12px;
-  }
+.react-select__menu {
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  z-index: 3000;
+}
+.react-select__option {
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  padding: 8px 12px;
+}
+.react-select__option--is-focused {
+  background: var(--metric) !important;
+  color: #fff !important;
+}
 
-  .dashboard-card h3 {
-    font-size: 1rem;
-    text-align: center;
-  }
-
-  .chart-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-  }
-
-  .chart-scroll > div {
-    min-width: 400px; /* keep chart readable */
-  }
-
-  .chart-scroll::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40px;
-    height: 100%;
-    pointer-events: none;
-    background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
-  }
+/* Responsive chart text */
+.recharts-cartesian-axis-tick text {
+  font-size: 12px !important;
+}
+@media (max-width: 600px) {
+  .recharts-cartesian-axis-tick text { font-size: 10px !important; }
+  .recharts-legend-item-text { font-size: 0.75rem !important; }
 }

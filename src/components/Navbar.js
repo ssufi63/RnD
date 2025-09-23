@@ -11,6 +11,7 @@ import {
   FaUserCircle,
   FaProjectDiagram,
 } from "react-icons/fa";
+import NotificationBell from "./NotificationBell"; // ✅ import here
 import "./../styles/navbar.css";
 
 const Navbar = ({ user, role, userName, onLogout }) => {
@@ -49,30 +50,51 @@ const Navbar = ({ user, role, userName, onLogout }) => {
                 <FaTachometerAlt /> Dashboard
               </Link>
             </li>
-            <li>
-              <Link to="/overview" onClick={() => setMenuOpen(false)}>
-                <FaUsers /> Overview
-              </Link>
-            </li>
-{(role === "admin" || role === "team_leader" || role === "manager") && (
-  <li>
-    <Link to="/assign" onClick={() => setMenuOpen(false)}>
-      <FaPlus /> Assign Task
-    </Link>
-  </li>
-)}
-{(role === "admin" /* || role === "team_leader" || role === "manager" */) && (
-  <li>
-    <Link to="/projects" onClick={() => setMenuOpen(false)}>
-      <FaProjectDiagram /> projects
-    </Link>
-  </li>
-)}
+
+            {(role === "admin" || role === "team_leader" || role === "manager") && (
+              <li>
+                <Link to="/overview" onClick={() => setMenuOpen(false)}>
+                  <FaUsers /> Overview
+                </Link>
+              </li>
+            )}
+
+            {(role === "admin" || role === "team_leader" || role === "manager") && (
+              <li>
+                <Link to="/change request" onClick={() => setMenuOpen(false)}>
+                  <FaUsers /> Approval
+                </Link>
+              </li>
+            )}
+
+            {(role === "admin" || role === "team_leader" || role === "manager") && (
+              <li>
+                <Link to="/assign" onClick={() => setMenuOpen(false)}>
+                  <FaPlus /> Assign Task
+                </Link>
+              </li>
+            )}
+
+            {role === "admin" && (
+              <li>
+                <Link to="/projects" onClick={() => setMenuOpen(false)}>
+                  <FaProjectDiagram /> Projects
+                </Link>
+              </li>
+            )}
+
             <li>
               <Link to="/tasks" onClick={() => setMenuOpen(false)}>
                 <FaTasks /> My Tasks
               </Link>
             </li>
+
+            {/* ✅ Add Notification Bell */}
+            <li>
+              <NotificationBell />
+            </li>
+
+            {/* User Info */}
             <li className="user-info">
               <FaUserCircle size={20} />
               <span>{userName || user.email}</span>
@@ -85,12 +107,7 @@ const Navbar = ({ user, role, userName, onLogout }) => {
       </ul>
 
       {/* Backdrop when menu is open */}
-      {menuOpen && (
-        <div
-          className="backdrop"
-          onClick={() => setMenuOpen(false)}
-        ></div>
-      )}
+      {menuOpen && <div className="backdrop" onClick={() => setMenuOpen(false)}></div>}
     </nav>
   );
 };
