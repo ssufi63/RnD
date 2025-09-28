@@ -231,7 +231,7 @@
 }
 
 /* ======================================
-   MODAL & FORM
+   MODAL & FORM (SCROLL FIX + BACKGROUND LOCK)
    ====================================== */
 .modalOverlay { 
   position: fixed; 
@@ -239,8 +239,10 @@
   background-color: rgba(0,0,0,0.4); 
   display: flex; 
   justify-content: center; 
-  align-items: center; 
+  align-items: flex-start;   /* align modal at top */
   z-index: 999; 
+  overflow-y: auto;          /* allow modal scrolling */
+  padding: 40px 0;           /* space above/below modal */
 }
 
 .modalContent { 
@@ -249,9 +251,15 @@
   padding: 24px; 
   width: 92%; 
   max-width: 760px; 
-  max-height: 90vh; 
-  overflow-y: auto; 
+  margin: auto;              /* center horizontally */
+  box-sizing: border-box;
 }
+
+/* lock background scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
 
 .modalHeader { 
   display: flex; 

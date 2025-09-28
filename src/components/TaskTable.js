@@ -355,6 +355,18 @@ export default function TaskTable() {
     fetchPending();
   }, [userId, userRole]);
 
+  // 🔒 Lock background scroll when modal is open
+  useEffect(() => {
+    if (editingTaskId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [editingTaskId]);
+
   const handleEditClick = (task) => {
     setEditingTaskId(task.id);
     setForm({
@@ -453,7 +465,7 @@ export default function TaskTable() {
   const currentTask = tasks.find((t) => t.id === editingTaskId);
 
   return (
-    <div className="taskBoard">{/* <-- wrapper to namespace CSS and boost specificity */}
+    <div className="taskBoard">
       <div className="viewToggle">
         <button
           className={viewMode === "card" ? "active" : ""}
