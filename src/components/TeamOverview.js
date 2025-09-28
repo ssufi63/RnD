@@ -7,8 +7,14 @@ export default function TeamOverview() {
   const [loading, setLoading] = useState(true);
   const [expandedUserId, setExpandedUserId] = useState(null);
   const [viewMode, setViewMode] = useState("card");
-  const [searchQuery, setSearchQuery] = useState(""); // ✅ search state
+  const [searchQuery, setSearchQuery] = useState("");
 
+  // Modal states
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [visibleTasks, setVisibleTasks] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  // Fetch tasks
   useEffect(() => {
     const fetchTasks = async () => {
       setLoading(true);
@@ -26,6 +32,7 @@ export default function TeamOverview() {
           completion_date,
           remarks,
           linked_folder,
+          assigned_by_label,
           assigned_to,
           profiles:assigned_to (
             id,
@@ -44,8 +51,34 @@ export default function TeamOverview() {
 
   const getBadgeClass = (type, value) => {
     if (!value) return "badge gray";
-    return `badge ${type}-${value.toLowerCase().replace(/\s+/g, "-")}`;
+    return `badge ${type}-${String(value).toLowerCase().replace(/\s+/g, "-")}`;
   };
+
+  const fmtDate = (s) => (s ? String(s).slice(0, 10) : "-");
+
+  // Keyboard navigation inside modal
+  useEffect(() => {
+    if (!selectedTask) return;
+
+    const handleKey = (e) => {
+      if (e.key === "ArrowRight" && selectedIndex < visibleTasks.length - 1) {
+        const newIndex = selectedIndex + 1;
+        setSelectedIndex(newIndex);
+        setSelectedTask(visibleTasks[newIndex]);
+      }
+      if (e.key === "ArrowLeft" && selectedIndex > 0) {
+        const newIndex = selectedIndex - 1;
+        setSelectedIndex(newIndex);
+        setSelectedTask(visibleTasks[newIndex]);
+      }
+      if (e.key === "Escape") {
+        setSelectedTask(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedTask, selectedIndex, visibleTasks]);
 
   if (loading) return <p>Loading team tasks...</p>;
   if (!tasks.length) return <p style={{ textAlign: "center" }}>No team tasks found</p>;
@@ -67,12 +100,13 @@ export default function TeamOverview() {
     a.user.full_name.localeCompare(b.user.full_name)
   );
 
-  // ✅ Apply search filter
-  if (searchQuery.trim() !== "") {
+  // Search filter
+  if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
-    users = users.filter(({ user }) =>
-      user.full_name.toLowerCase().includes(q) ||
-      user.department?.toLowerCase().includes(q)
+    users = users.filter(
+      ({ user }) =>
+        user.full_name.toLowerCase().includes(q) ||
+        user.department?.toLowerCase().includes(q)
     );
   }
 
@@ -80,7 +114,7 @@ export default function TeamOverview() {
     <div className="team-container">
       <h2 className="pageTitle">👥 Team Tasks Overview</h2>
 
-      {/* ✅ Manual Search Box */}
+      {/* Search Box */}
       <div className="searchBox">
         <input
           type="text"
@@ -111,7 +145,7 @@ export default function TeamOverview() {
         </button>
       </div>
 
-      {/* 🔽 existing card/table rendering remains the same */}
+      {/* Card View */}
       {viewMode === "card" ? (
         <>
           {users.map(({ user, tasks }) => {
@@ -123,11 +157,18 @@ export default function TeamOverview() {
               }, {}),
             };
 
+            // sort tasks: non-completed by deadline first, completed last
+            const sortedTasks = [...tasks].sort((a, b) => {
+              if (a.status === "Completed" && b.status !== "Completed") return 1;
+              if (a.status !== "Completed" && b.status === "Completed") return -1;
+              const maxDate = new Date(8640000000000000);
+              const aDeadline = a.deadline ? new Date(a.deadline) : maxDate;
+              const bDeadline = b.deadline ? new Date(b.deadline) : maxDate;
+              return aDeadline - bDeadline;
+            });
+
             return (
-              <div
-                key={user.id || user.full_name}
-                className="userSection"
-              >
+              <div key={user.id || user.full_name} className="userSection">
                 {/* User Card */}
                 <div
                   className={`userCard ${expandedUserId === user.id ? "expanded" : ""}`}
@@ -148,7 +189,9 @@ export default function TeamOverview() {
                       {Object.entries(summary.byStatus).map(([k, v]) => (
                         <span
                           key={k}
-                          className={`chip status-${k.toLowerCase().replace(" ", "-")}`}
+                          className={`chip status-${String(k)
+                            .toLowerCase()
+                            .replace(" ", "-")}`}
                         >
                           {k}: {v}
                         </span>
@@ -160,8 +203,16 @@ export default function TeamOverview() {
                 {/* Expanded Cards */}
                 {expandedUserId === user.id && (
                   <div className="gridWrapper">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="taskCard">
+                    {sortedTasks.map((task, idx) => (
+                      <div
+                        key={task.id}
+                        className="taskCard clickable"
+                        onClick={() => {
+                          setVisibleTasks(sortedTasks);
+                          setSelectedIndex(idx);
+                          setSelectedTask(task);
+                        }}
+                      >
                         <strong>{task.task_title ?? "(Untitled)"}</strong>
                         <div className="badgeRow">
                           <span className={getBadgeClass("product", task.product)}>
@@ -177,7 +228,9 @@ export default function TeamOverview() {
                         <p className="taskMeta">
                           📅 {task.deadline ? task.deadline.slice(0, 10) : "No deadline"}
                         </p>
-                        <p className="taskMetaSmall">{task.task_type}</p>
+                        <p className="taskMetaSmall">
+                          👤 Assigned By: {task.assigned_by_label || "N/A"}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -187,7 +240,7 @@ export default function TeamOverview() {
           })}
         </>
       ) : (
-        /* ✅ Table View unchanged */
+        /* Table View */
         <div className="taskTableWrapper">
           <table className="taskTable">
             <thead>
@@ -205,52 +258,108 @@ export default function TeamOverview() {
               </tr>
             </thead>
             <tbody>
-              {users.map(({ user, tasks }) => {
-                const sortedTasks = [...tasks].sort((a, b) => {
-                  if (a.status === "Completed" && b.status !== "Completed") return 1;
-                  if (a.status !== "Completed" && b.status === "Completed") return -1;
-                  return 0;
-                });
-
-                return (
-                  <React.Fragment key={user.id || user.full_name}>
-                    {/* Owner row */}
-                    <tr className="ownerRow">
-                      <td colSpan={10}>
-                        👤 <strong>{user.full_name}</strong> ({user.department})
-                      </td>
+              {users.map(({ user, tasks }) => (
+                <React.Fragment key={user.id || user.full_name}>
+                  <tr className="ownerRow">
+                    <td colSpan={10}>
+                      👤 <strong>{user.full_name}</strong> ({user.department})
+                    </td>
+                  </tr>
+                  {tasks.map((task, idx) => (
+                    <tr
+                      key={task.id}
+                      className={
+                        task.status === "Completed"
+                          ? "taskRow completedTask"
+                          : "taskRow"
+                      }
+                    >
+                      <td>{idx + 1}</td>
+                      <td>{user.full_name}</td>
+                      <td>{task.task_title ?? "(Untitled)"}</td>
+                      <td>{task.product || "-"}</td>
+                      <td>{task.status || "-"}</td>
+                      <td>{task.priority || "-"}</td>
+                      <td>{task.task_type || "-"}</td>
+                      <td>{fmtDate(task.start_date)}</td>
+                      <td>{fmtDate(task.deadline)}</td>
+                      <td>{fmtDate(task.completion_date)}</td>
                     </tr>
-
-                    {sortedTasks.map((task, idx) => (
-                      <tr
-                        key={task.id}
-                        className={
-                          task.status === "Completed"
-                            ? "taskRow completedTask"
-                            : "taskRow"
-                        }
-                      >
-                        <td>{idx + 1}</td>
-                        <td>{user.full_name}</td>
-                        <td>{task.task_title ?? "(Untitled)"}</td>
-                        <td>{task.product || "-"}</td>
-                        <td>{task.status || "-"}</td>
-                        <td>{task.priority || "-"}</td>
-                        <td>{task.task_type || "-"}</td>
-                        <td>{task.start_date ? task.start_date.slice(0, 10) : "-"}</td>
-                        <td>{task.deadline ? task.deadline.slice(0, 10) : "-"}</td>
-                        <td>
-                          {task.completion_date
-                            ? task.completion_date.slice(0, 10)
-                            : "-"}
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                );
-              })}
+                  ))}
+                </React.Fragment>
+              ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal - Expanded Task Details */}
+      {selectedTask && (
+        <div className="modalOverlay" onClick={() => setSelectedTask(null)}>
+          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <h3>{selectedTask.task_title ?? "(Untitled Task)"}</h3>
+              <button className="closeBtn" onClick={() => setSelectedTask(null)}>
+                ✖
+              </button>
+            </div>
+            <div className="modalBody">
+              <p><strong>Product:</strong> {selectedTask.product || "-"}</p>
+              <p><strong>Status:</strong> {selectedTask.status || "-"}</p>
+              <p><strong>Priority:</strong> {selectedTask.priority || "-"}</p>
+              <p><strong>Task Type:</strong> {selectedTask.task_type || "-"}</p>
+              <p><strong>Start Date:</strong> {fmtDate(selectedTask.start_date)}</p>
+              <p><strong>Deadline:</strong> {fmtDate(selectedTask.deadline)}</p>
+              <p><strong>Completion Date:</strong> {fmtDate(selectedTask.completion_date)}</p>
+              <p><strong>Assigned To:</strong> {selectedTask.profiles?.full_name || "Unknown"}</p>
+              <p><strong>Department:</strong> {selectedTask.profiles?.department || "-"}</p>
+              <p><strong>Assigned By:</strong> {selectedTask.assigned_by_label || "N/A"}</p>
+              <p><strong>Remarks:</strong> {selectedTask.remarks || "-"}</p>
+              <p>
+                <strong>Linked Folder:</strong>{" "}
+                {selectedTask.linked_folder ? (
+                  <a
+                    href={selectedTask.linked_folder}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </a>
+                ) : (
+                  "-"
+                )}
+              </p>
+            </div>
+
+            <div className="modalFooter">
+              <button
+                className="navBtn"
+                disabled={selectedIndex === 0}
+                onClick={() => {
+                  if (selectedIndex > 0) {
+                    const newIndex = selectedIndex - 1;
+                    setSelectedIndex(newIndex);
+                    setSelectedTask(visibleTasks[newIndex]);
+                  }
+                }}
+              >
+                ← Previous
+              </button>
+              <button
+                className="navBtn"
+                disabled={selectedIndex === visibleTasks.length - 1}
+                onClick={() => {
+                  if (selectedIndex < visibleTasks.length - 1) {
+                    const newIndex = selectedIndex + 1;
+                    setSelectedIndex(newIndex);
+                    setSelectedTask(visibleTasks[newIndex]);
+                  }
+                }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
