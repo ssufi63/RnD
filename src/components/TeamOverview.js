@@ -303,32 +303,93 @@ export default function TeamOverview() {
                 ✖
               </button>
             </div>
+
             <div className="modalBody">
-              <p><strong>Product:</strong> {selectedTask.product || "-"}</p>
-              <p><strong>Status:</strong> {selectedTask.status || "-"}</p>
-              <p><strong>Priority:</strong> {selectedTask.priority || "-"}</p>
-              <p><strong>Task Type:</strong> {selectedTask.task_type || "-"}</p>
-              <p><strong>Start Date:</strong> {fmtDate(selectedTask.start_date)}</p>
-              <p><strong>Deadline:</strong> {fmtDate(selectedTask.deadline)}</p>
-              <p><strong>Completion Date:</strong> {fmtDate(selectedTask.completion_date)}</p>
-              <p><strong>Assigned To:</strong> {selectedTask.profiles?.full_name || "Unknown"}</p>
-              <p><strong>Department:</strong> {selectedTask.profiles?.department || "-"}</p>
-              <p><strong>Assigned By:</strong> {selectedTask.assigned_by_label || "N/A"}</p>
-              <p><strong>Remarks:</strong> {selectedTask.remarks || "-"}</p>
-              <p>
-                <strong>Linked Folder:</strong>{" "}
-                {selectedTask.linked_folder ? (
-                  <a
-                    href={selectedTask.linked_folder}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </p>
+              <div className="modalDetails">
+                <p>
+                  <strong>Product</strong>
+                  <span>{selectedTask.product || "-"}</span>
+                </p>
+                <p>
+                  <strong>Status</strong>
+                  <span>
+                    {selectedTask.status ? (
+                      <span
+                        className={`modalBadge status-${selectedTask.status
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`}
+                      >
+                        {selectedTask.status}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </span>
+                </p>
+                <p>
+                  <strong>Priority</strong>
+                  <span>
+                    {selectedTask.priority ? (
+                      <span
+                        className={`modalBadge priority-${selectedTask.priority
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`}
+                      >
+                        {selectedTask.priority}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </span>
+                </p>
+                <p>
+                  <strong>Task Type</strong>
+                  <span>{selectedTask.task_type || "-"}</span>
+                </p>
+                <p>
+                  <strong>Start Date</strong>
+                  <span>{fmtDate(selectedTask.start_date)}</span>
+                </p>
+                <p>
+                  <strong>Deadline</strong>
+                  <span>{fmtDate(selectedTask.deadline)}</span>
+                </p>
+                <p>
+                  <strong>Completion Date</strong>
+                  <span>{fmtDate(selectedTask.completion_date)}</span>
+                </p>
+                <p>
+                  <strong>Assigned To</strong>
+                  <span>{selectedTask.profiles?.full_name || "Unknown"}</span>
+                </p>
+                <p>
+                  <strong>Department</strong>
+                  <span>{selectedTask.profiles?.department || "-"}</span>
+                </p>
+                <p>
+                  <strong>Assigned By</strong>
+                  <span>{selectedTask.assigned_by_label || "N/A"}</span>
+                </p>
+                <p className="full">
+                  <strong>Remarks</strong>
+                  <span>{selectedTask.remarks || "-"}</span>
+                </p>
+                <p className="full">
+                  <strong>Linked Folder</strong>
+                  {selectedTask.linked_folder ? (
+                    <a
+                      href={selectedTask.linked_folder}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#1976d2", textDecoration: "underline" }}
+                    >
+                      Open Folder
+                    </a>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </p>
+              </div>
             </div>
 
             <div className="modalFooter">
