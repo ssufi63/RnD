@@ -1,5 +1,5 @@
 // src/components/Navbar.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaTasks,
@@ -11,11 +11,34 @@ import {
   FaUserCircle,
   FaProjectDiagram,
 } from "react-icons/fa";
-import NotificationBell from "./NotificationBell"; // ✅ import here
+import { supabase } from "../supabaseClient"; // ✅ import Supabase
+import NotificationBell from "./NotificationBell";
 import "./../styles/navbar.css";
 
 const Navbar = ({ user, role, userName, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isProjectMember, setIsProjectMember] = useState(false);
+
+  useEffect(() => {
+    const checkMembership = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("project_members")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (error) {
+        console.error("Membership check failed:", error);
+        setIsProjectMember(false);
+      } else {
+        setIsProjectMember(data.length > 0);
+      }
+    };
+
+    checkMembership();
+  }, [user]);
 
   return (
     <nav className="navbar">
@@ -59,6 +82,18 @@ const Navbar = ({ user, role, userName, onLogout }) => {
               </li>
             )}
 
+            {/* ✅ Show Boards for admins, managers, or project members */}
+            {(role === "admin" ||
+              role === "team_leader" ||
+              role === "manager" ||
+              isProjectMember) && (
+              <li>
+                <Link to="/projectsboard" onClick={() => setMenuOpen(false)}>
+                  <FaProjectDiagram /> Boards
+                </Link>
+              </li>
+            )}
+
             {(role === "admin" || role === "team_leader" || role === "manager") && (
               <li>
                 <Link to="/change request" onClick={() => setMenuOpen(false)}>
@@ -75,13 +110,13 @@ const Navbar = ({ user, role, userName, onLogout }) => {
               </li>
             )}
 
-            {role === "admin" && (
+     {/*        {role === "admin" && (
               <li>
                 <Link to="/projects" onClick={() => setMenuOpen(false)}>
                   <FaProjectDiagram /> Projects
                 </Link>
               </li>
-            )}
+            )} */}
 
             <li>
               <Link to="/tasks" onClick={() => setMenuOpen(false)}>
@@ -89,7 +124,7 @@ const Navbar = ({ user, role, userName, onLogout }) => {
               </Link>
             </li>
 
-            {/* ✅ Add Notification Bell */}
+            {/* ✅ Notification Bell */}
             <li>
               <NotificationBell />
             </li>

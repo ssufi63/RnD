@@ -1,0 +1,138 @@
+.project-details-wrapper {
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+  color: #1f2937;
+}
+
+.project-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.project-title .muted {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.details-section {
+  margin-bottom: 2rem;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+.section-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.section-icon {
+  font-size: 1.2rem;
+}
+.task-icon {
+  color: #2563eb;
+}
+.member-icon {
+  color: #16a34a;
+}
+.remark-icon {
+  color: #9333ea;
+}
+
+.empty-text {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ===== TASK GRID ===== */
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.task-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: 0.2s ease;
+}
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+.task-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.task-desc {
+  color: #4b5563;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+.task-deadline {
+  font-size: 0.8rem;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+/* ===== MEMBER GRID ===== */
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.avatar {
+  background: #2563eb;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.member-name {
+  font-weight: 600;
+}
+.member-email {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ===== REMARKS ===== */
+.remarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.remark-card {
+  background: #f9fafb;
+  border-left: 4px solid #9333ea;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.remark-text {
+  font-size: 0.9rem;
+}
+.remark-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 3px;
+}
