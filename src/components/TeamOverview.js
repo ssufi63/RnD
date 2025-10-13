@@ -39,7 +39,8 @@ export default function TeamOverview() {
           profiles:assigned_to (
             id,
             full_name,
-            department
+            department,
+            employee_id
           )
         `)
         .order("created_at", { ascending: false });
@@ -90,7 +91,7 @@ export default function TeamOverview() {
     const userId = task.profiles?.id || "unknown";
     if (!acc[userId]) {
       acc[userId] = {
-        user: task.profiles || { full_name: "Unknown", department: "-" },
+        user: task.profiles || { full_name: "Unknown", department: "-", employee_id: "-" },
         tasks: [],
       };
     }
@@ -122,7 +123,8 @@ export default function TeamOverview() {
       tasks.forEach((task, idx) => {
         exportData.push({
           "S/N": idx + 1,
-          Owner: user.full_name,
+          "Staff ID": user.employee_id || "-",
+          Name: user.full_name,
           Department: user.department,
           Title: task.task_title ?? "(Untitled)",
           Product: task.product || "-",
