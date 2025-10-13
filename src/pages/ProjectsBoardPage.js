@@ -141,7 +141,7 @@ export default function ProjectsBoardPage({ role }) {
         <div className="sidebar-header">
           <h3>Projects</h3>
           <button className="add-btn" onClick={() => setShowProjectModal(true)}>
-            + Add
+            + Add Project
           </button>
         </div>
         <input

@@ -8,6 +8,8 @@ import {
   FaComments,
   FaChartLine,
   FaChartBar,
+  FaSync,
+  FaHeartbeat,
 } from "react-icons/fa";
 import Chart from "chart.js/auto";
 import "./ProjectSnapshotPanel.css";
@@ -17,40 +19,49 @@ export default function ProjectSnapshotPanel({ project }) {
   const [members, setMembers] = useState([]);
   const [remarks, setRemarks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const chartRef = useRef(null);
+  const statusChartRef = useRef(null);
   const chartInstance = useRef(null);
+  const statusChartInstance = useRef(null);
+
+  const fetchData = async () => {
+    if (!project?.project_id) return;
+    setLoading(true);
+    try {
+      const { data: tData, error: tErr } = await supabase
+        .from("kanban_tasks")
+        .select("*, assigned_to(full_name)")
+        .eq("project_id", project.project_id);
+
+      const { data: mData, error: mErr } = await supabase
+        .from("project_members")
+        .select("user_id, profiles: user_id (full_name)")
+        .eq("project_id", project.project_id);
+
+      const { data: rData, error: rErr } = await supabase
+        .from("project_remarks")
+        .select("remark, created_at, profiles: created_by (full_name)")
+        .eq("project_id", project.project_id)
+        .order("created_at", { ascending: false });
+
+      if (tErr || mErr || rErr)
+        console.error("Supabase errors:", { tErr, mErr, rErr });
+
+      setTasks(tData || []);
+      setMembers(mData || []);
+      setRemarks(rData || []);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Fetch error:", err);
+      toast.error("Failed to load project data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!project?.project_id) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const { data: tData } = await supabase
-          .from("kanban_tasks")
-          .select("*, profiles(full_name)")
-          .eq("project_id", project.project_id);
-        setTasks(tData || []);
-
-        const { data: mData } = await supabase
-          .from("project_members")
-          .select("user_id, profiles(full_name)")
-          .eq("project_id", project.project_id);
-        setMembers(mData || []);
-
-        const { data: rData } = await supabase
-          .from("project_remarks")
-          .select("remark, created_at, profiles(full_name)")
-          .eq("project_id", project.project_id)
-          .order("created_at", { ascending: false });
-        setRemarks(rData || []);
-      } catch (err) {
-        toast.error("Failed to load project data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
 
     const ch = supabase
@@ -131,13 +142,50 @@ export default function ProjectSnapshotPanel({ project }) {
 
   const latestRemark = remarks[0];
 
-  // 🔹 Chart setup
+  // 🔹 Derived KPIs
+  const health = useMemo(() => {
+    if (!tasks.length) return "No Data";
+    if (overdueCount > 3) return "At Risk";
+    if (completed / total > 0.8) return "On Track";
+    if (completed / total > 0.5) return "Behind";
+    return "Critical";
+  }, [tasks, overdueCount]);
+
+  const avgCompletionDays = useMemo(() => {
+    const completedTasks = tasks.filter(
+      (t) => t.status?.toLowerCase() === "completed"
+    );
+    const durations = completedTasks
+      .map(
+        (t) =>
+          (new Date(t.updated_at) - new Date(t.start_date)) /
+          (1000 * 60 * 60 * 24)
+      )
+      .filter((v) => v > 0);
+    return durations.length
+      ? (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)
+      : null;
+  }, [tasks]);
+
+  const topContributor = useMemo(() => {
+    const counts = {};
+    tasks.forEach((t) => {
+      if (t.status?.toLowerCase() === "completed") {
+        const name = t.assigned_to?.full_name || "Unassigned";
+        counts[name] = (counts[name] || 0) + 1;
+      }
+    });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    return top ? { name: top[0], completed: top[1] } : null;
+  }, [tasks]);
+
+  // 🔹 Chart: Tasks per member
   useEffect(() => {
     if (!chartRef.current) return;
 
     const taskCountByMember = {};
     tasks.forEach((t) => {
-      const name = t.profiles?.full_name || "Unassigned";
+      const name = t.assigned_to?.full_name || "Unassigned";
       taskCountByMember[name] = (taskCountByMember[name] || 0) + 1;
     });
 
@@ -163,16 +211,46 @@ export default function ProjectSnapshotPanel({ project }) {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: {
-            ticks: { color: "#4b5563", font: { size: 11 } },
-          },
-          y: {
-            ticks: { color: "#6b7280", stepSize: 1 },
-            grid: { color: "#e5e7eb" },
-          },
+          x: { ticks: { color: "#4b5563", font: { size: 11 } } },
+          y: { ticks: { color: "#6b7280", stepSize: 1 }, grid: { color: "#e5e7eb" } },
         },
         plugins: { legend: { display: false } },
       },
+    });
+  }, [tasks]);
+
+  // 🔹 Chart: Task status distribution
+  useEffect(() => {
+    if (!statusChartRef.current) return;
+
+    const statusCounts = tasks.reduce((acc, t) => {
+      const s = t.status || "Unknown";
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    const labels = Object.keys(statusCounts);
+    const data = Object.values(statusCounts);
+
+    if (statusChartInstance.current) statusChartInstance.current.destroy();
+
+    statusChartInstance.current = new Chart(statusChartRef.current, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor: [
+              "#60a5fa",
+              "#fbbf24",
+              "#34d399",
+              "#f87171",
+              "#a78bfa",
+            ],
+          },
+        ],
+      },
+      options: { plugins: { legend: { position: "bottom" } } },
     });
   }, [tasks]);
 
@@ -187,26 +265,42 @@ export default function ProjectSnapshotPanel({ project }) {
       <div className="snapshot-header">
         <FaChartLine className="snapshot-header-icon" />
         <h3>Project Snapshot</h3>
+        <button className="refresh-btn" onClick={fetchData}>
+          <FaSync /> Refresh
+        </button>
       </div>
 
       <div className="snapshot-grid">
+        {/* Project Health */}
+        <div className="snapshot-card">
+          <div className="snapshot-card-header">
+            <FaHeartbeat className="icon red" />
+            <h4>Project Health</h4>
+          </div>
+          <div className={`health-badge ${health.toLowerCase().replace(" ", "-")}`}>
+            {health}
+          </div>
+          <p className="small-text">
+            Avg completion time: {avgCompletionDays ? `${avgCompletionDays} days` : "N/A"}
+          </p>
+          <p className="small-text">
+            ⭐ Top contributor: {topContributor ? `${topContributor.name} (${topContributor.completed})` : "N/A"}
+          </p>
+        </div>
+
         {/* Progress */}
         <div className="snapshot-card">
           <div className="snapshot-card-header">
             <FaTasks className="icon blue" />
             <h4>Progress</h4>
           </div>
-          <p className="muted-text">
-            {completed}/{total} tasks done
-          </p>
+          <p className="muted-text">{completed}/{total} tasks done</p>
           <div className="progress-bar">
             <div
               className="progress-fill"
               style={{
                 width:
-                  total === 0
-                    ? "0%"
-                    : Math.min(100, (completed / total) * 100) + "%",
+                  total === 0 ? "0%" : Math.min(100, (completed / total) * 100) + "%",
               }}
             ></div>
           </div>
@@ -224,20 +318,17 @@ export default function ProjectSnapshotPanel({ project }) {
               : "No upcoming deadline"}
           </p>
           <p className="small-text">
-            {daysToDelivery
-              ? `${daysToDelivery} days remaining`
-              : "No schedule"}
+            {daysToDelivery ? `${daysToDelivery} days remaining` : "No schedule"}
           </p>
           {overdueCount > 0 && (
             <p className="small-text danger">
-              ⚠️ {overdueCount} overdue task
-              {overdueCount !== 1 ? "s" : ""}
+              ⚠️ {overdueCount} overdue task{overdueCount !== 1 ? "s" : ""}
             </p>
           )}
         </div>
 
-        {/* Members */}
- {/*        <div className="snapshot-card">
+        {/* Team */}
+        {/* <div className="snapshot-card">
           <div className="snapshot-card-header">
             <FaUsers className="icon green" />
             <h4>Team</h4>
@@ -257,8 +348,8 @@ export default function ProjectSnapshotPanel({ project }) {
           </div>
         </div> */}
 
-        {/* Remark */}
-        <div className="snapshot-card">
+        {/* Remarks */}
+        {/* <div className="snapshot-card">
           <div className="snapshot-card-header">
             <FaComments className="icon purple" />
             <h4>Remark</h4>
@@ -268,7 +359,7 @@ export default function ProjectSnapshotPanel({ project }) {
           ) : (
             <p className="muted-text">No remarks yet.</p>
           )}
-        </div>
+        </div> */}
 
         {/* Activity */}
         <div className="snapshot-card activity">
@@ -281,7 +372,7 @@ export default function ProjectSnapshotPanel({ project }) {
           </span>
         </div>
 
-        {/* Chart */}
+        {/* Tasks per Member */}
         <div className="snapshot-card chart-card">
           <div className="snapshot-card-header">
             <FaChartLine className="icon indigo" />
@@ -291,6 +382,22 @@ export default function ProjectSnapshotPanel({ project }) {
             <canvas ref={chartRef}></canvas>
           </div>
         </div>
+
+        {/* Task Status */}
+        <div className="snapshot-card chart-card">
+          <div className="snapshot-card-header">
+            <FaChartLine className="icon pink" />
+            <h4>Task Status</h4>
+          </div>
+          <div className="chart-wrapper">
+            <canvas ref={statusChartRef}></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div className="last-updated">
+        Last synced:{" "}
+        {lastUpdated ? lastUpdated.toLocaleTimeString() : "Just now"}
       </div>
     </div>
   );

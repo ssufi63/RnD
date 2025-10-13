@@ -356,6 +356,30 @@
 .navBtn:hover:enabled {
   background: #145ca1;
 }
+/* -------------------------------------- */
+/* Download Button (Table View) */
+/* -------------------------------------- */
+.downloadContainer {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.downloadBtn {
+  background-color: #198754;
+  color: #fff;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.downloadBtn:hover {
+  background-color: #157347;
+}
+
 
 /* -------------------------------------- */
 /* Responsive tweaks for mobile */

@@ -5,25 +5,51 @@
   color: #1f2937;
 }
 
+/* ===== TITLE ===== */
 .project-title {
   text-align: center;
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 .project-title .muted {
   color: #6b7280;
   font-weight: 500;
 }
 
+/* ===== MEMBERS ROW ===== */
+.member-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 1.2rem;
+}
+.member-row span::after {
+  content: "|";
+  margin: 0 6px;
+  color: #9ca3af;
+}
+.member-row span:last-child::after {
+  content: "";
+}
+
+/* ===== SECTIONS ===== */
 .details-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 .section-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.section-left {
+  display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 0.75rem;
 }
 .section-header h3 {
   font-size: 1.1rem;
@@ -32,107 +58,204 @@
 .section-icon {
   font-size: 1.2rem;
 }
-.task-icon {
-  color: #2563eb;
+.task-icon { color: #2563eb; }
+.remark-icon { color: #9333ea; }
+
+.kanban-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s ease;
+  margin-left: 6px;
 }
-.member-icon {
-  color: #16a34a;
-}
-.remark-icon {
-  color: #9333ea;
-}
+.kanban-btn.blue { background: #2563eb; }
+.kanban-btn.blue:hover { background: #1d4ed8; }
+.kanban-btn.green { background: #16a34a; }
+.kanban-btn.green:hover { background: #15803d; }
 
 .empty-text {
   color: #9ca3af;
   font-style: italic;
 }
 
-/* ===== TASK GRID ===== */
-.task-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-.task-card {
+/* ===== TASK LIST ===== */
+.task-list { display: flex; flex-direction: column; gap: 10px; }
+
+.task-row {
+  position: relative;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column; /* stack content and expansion */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: 0.2s ease;
 }
-.task-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+.task-row:hover { transform: translateY(-2px); }
+.task-row.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
 }
-.task-title {
+
+.task-summary {
+  display: grid;
+  grid-template-columns: 40% 20% 30%;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.task-name {
   font-weight: 600;
-  margin-bottom: 4px;
-}
-.task-desc {
-  color: #4b5563;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
+  color: #1e293b;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .task-deadline {
-  font-size: 0.8rem;
+  font-size: 0.85rem; color: #2563eb; font-weight: 500;
+  text-align: right; white-space: nowrap;
+}
+.task-remark-inline {
+  font-size: 0.85rem; color: #6b7280;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* expand arrow */
+.expand-btn-large {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: #2563eb;
-  font-weight: 500;
+  font-size: 1.4rem;
+  transition: transform 0.2s ease;
+  z-index: 2;
+}
+.expand-btn-large:hover {
+  transform: scale(1.15);
 }
 
-/* ===== MEMBER GRID ===== */
-.member-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-.member-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-.avatar {
-  background: #2563eb;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.member-name {
-  font-weight: 600;
-}
-.member-email {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-/* ===== REMARKS ===== */
-.remarks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.remark-card {
+/* compact inline expansion under the summary */
+.task-inline {
+  width: 100%;
   background: #f9fafb;
-  border-left: 4px solid #9333ea;
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  margin-top: 8px;
+  padding: 10px;
+  box-sizing: border-box;
 }
-.remark-text {
-  font-size: 0.9rem;
+.task-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
 }
-.remark-time {
+.ti-label {
   font-size: 0.75rem;
   color: #6b7280;
-  margin-top: 3px;
+  margin-bottom: 2px;
+}
+.ti-value { font-size: 0.9rem; color: #111827; }
+
+.task-inline-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.btn-outline {
+  background: #fff; color: #111827; border: 1px solid #d1d5db;
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem;
+}
+.btn-outline:hover { background: #f3f4f6; }
+
+/* assign + remark inline controls */
+.assign-inline {
+  margin-top: 8px;
+}
+.assign-inline select {
+  border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 8px;
+}
+
+.remark-inline { margin-top: 8px; }
+.remark-inline textarea {
+  width: 100%; min-height: 60px;
+  border: 1px solid #d1d5db; border-radius: 6px; padding: 6px; resize: vertical;
+}
+.remark-inline-actions { margin-top: 6px; display: flex; gap: 8px; }
+.btn-blue.small, .btn-gray.small { padding: 6px 10px; font-size: 0.8rem; }
+.btn-blue.small {
+  background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;
+}
+.btn-blue.small:hover { background: #1d4ed8; }
+.btn-gray.small {
+  background: #f3f4f6; color: #111827; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
+}
+.btn-gray.small:hover { background: #e5e7eb; }
+
+/* ===== TWO-COLUMN REMARKS (COMPACT) ===== */
+.two-column {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.column {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;
+}
+.column h3 {
+  font-size: 1rem; font-weight: 600; color: #1e293b; margin-bottom: 8px;
+}
+
+/* compact remark chips */
+.remarks-compact { display: flex; flex-direction: column; gap: 8px; }
+.remark-chip {
+  background: #f8fafc; border-left: 3px solid #8b5cf6; border-radius: 6px;
+  padding: 8px 10px;
+}
+.rc-line { font-size: 0.9rem; color: #111827; }
+.rc-text { color: #374151; }
+.rc-time { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+
+.project-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.kanban-btn.purple {
+  background: #9333ea;
+}
+.kanban-btn.purple:hover {
+  background: #7e22ce;
+}
+.project-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.kanban-btn.purple {
+  background: #9333ea;
+}
+.kanban-btn.purple:hover {
+  background: #7e22ce;
+}
+
+
+/* responsive tweaks */
+@media (max-width: 900px) {
+  .task-summary { grid-template-columns: 50% 22% 28%; }
+  .task-inline-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+@media (max-width: 640px) {
+  .two-column { grid-template-columns: 1fr; }
+  .task-summary { grid-template-columns: 60% 40%; }
+  .task-remark-inline { grid-column: 1 / -1; }
 }

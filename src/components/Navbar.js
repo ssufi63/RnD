@@ -89,7 +89,7 @@ const Navbar = ({ user, role, userName, onLogout }) => {
               isProjectMember) && (
               <li>
                 <Link to="/projectsboard" onClick={() => setMenuOpen(false)}>
-                  <FaProjectDiagram /> Boards
+                  <FaProjectDiagram /> Projects
                 </Link>
               </li>
             )}

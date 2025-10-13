@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import "./TeamOverview.css";
 
 export default function TeamOverview() {
@@ -110,6 +112,43 @@ export default function TeamOverview() {
     );
   }
 
+  // -------------------------------------
+  // 📦 Excel Download Function
+  // -------------------------------------
+  const downloadTable = () => {
+    const exportData = [];
+
+    users.forEach(({ user, tasks }) => {
+      tasks.forEach((task, idx) => {
+        exportData.push({
+          "S/N": idx + 1,
+          Owner: user.full_name,
+          Department: user.department,
+          Title: task.task_title ?? "(Untitled)",
+          Product: task.product || "-",
+          Status: task.status || "-",
+          Priority: task.priority || "-",
+          "Task Type": task.task_type || "-",
+          "Start Date": fmtDate(task.start_date),
+          Deadline: fmtDate(task.deadline),
+          Completion: fmtDate(task.completion_date),
+        });
+      });
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Team Tasks");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, `Team_Tasks_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  // -------------------------------------
+
   return (
     <div className="team-container">
       <h2 className="pageTitle">👥 Team Tasks Overview</h2>
@@ -145,6 +184,15 @@ export default function TeamOverview() {
         </button>
       </div>
 
+      {/* ✅ Download Button only in Table View */}
+      {viewMode === "table" && (
+        <div className="downloadContainer">
+          <button onClick={downloadTable} className="downloadBtn">
+            ⬇️ Download Table (Excel)
+          </button>
+        </div>
+      )}
+
       {/* Card View */}
       {viewMode === "card" ? (
         <>
@@ -157,7 +205,6 @@ export default function TeamOverview() {
               }, {}),
             };
 
-            // sort tasks: non-completed by deadline first, completed last
             const sortedTasks = [...tasks].sort((a, b) => {
               if (a.status === "Completed" && b.status !== "Completed") return 1;
               if (a.status !== "Completed" && b.status === "Completed") return -1;
@@ -169,7 +216,6 @@ export default function TeamOverview() {
 
             return (
               <div key={user.id || user.full_name} className="userSection">
-                {/* User Card */}
                 <div
                   className={`userCard ${expandedUserId === user.id ? "expanded" : ""}`}
                   onClick={() =>
@@ -200,7 +246,6 @@ export default function TeamOverview() {
                   </div>
                 </div>
 
-                {/* Expanded Cards */}
                 {expandedUserId === user.id && (
                   <div className="gridWrapper">
                     {sortedTasks.map((task, idx) => (
@@ -293,7 +338,7 @@ export default function TeamOverview() {
         </div>
       )}
 
-      {/* Modal - Expanded Task Details */}
+      {/* Modal */}
       {selectedTask && (
         <div className="modalOverlay" onClick={() => setSelectedTask(null)}>
           <div className="modalContent" onClick={(e) => e.stopPropagation()}>
