@@ -1,3 +1,7 @@
+/* ==========================================================
+   📘 TEAM OVERVIEW PAGE STYLES
+   ========================================================== */
+
 .team-container {
   width: 90%;
   max-width: 1200px;
@@ -5,15 +9,14 @@
   font-family: Inter, Arial, sans-serif;
   padding: 0 10px;
 }
+
 .pageTitle {
   text-align: center;
   margin-bottom: 20px;
   color: #0d6efd;
 }
 
-/* -------------------------------------- */
-/* Search Box */
-/* -------------------------------------- */
+/* === Search Box === */
 .searchBox {
   display: flex;
   justify-content: center;
@@ -21,6 +24,7 @@
   margin: 1rem 0;
   gap: 6px;
 }
+
 .searchBox input {
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -28,11 +32,13 @@
   width: 260px;
   font-size: 14px;
 }
+
 .searchBox input:focus {
   outline: none;
   border-color: #1976d2;
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
 }
+
 .searchBox .clearBtn {
   border: none;
   background: #eee;
@@ -43,31 +49,34 @@
   font-size: 14px;
   line-height: 1;
 }
+
 .searchBox .clearBtn:hover {
   background: #ddd;
 }
 
-/* -------------------------------------- */
-/* User Section (Card View) */
-/* -------------------------------------- */
+/* === User Section (Card View) === */
 .userSection {
   margin-bottom: 40px;
 }
+
 .userCard {
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 16px;
   background: linear-gradient(135deg, #f9fafb, #f3f4f6);
 }
+
 .userCard.expanded {
   background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
 }
+
 .userCardContent {
   text-align: center;
 }
+
 .avatarLarge {
   width: 64px;
   height: 64px;
@@ -80,26 +89,29 @@
   font-weight: 700;
   font-size: 22px;
   margin: 0 auto 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
 .userName {
   margin: 4px 0;
   font-size: 18px;
   font-weight: 600;
   color: #111827;
 }
+
 .userDept {
   margin: 0;
   font-size: 14px;
   color: #6b7280;
 }
+
 .taskSummary {
   margin: 8px 0;
   font-size: 14px;
   color: #374151;
 }
 
-/* Status Chips */
+/* === Status Chips === */
 .statusChips {
   display: flex;
   justify-content: center;
@@ -107,32 +119,36 @@
   gap: 8px;
   margin-top: 8px;
 }
+
 .chip {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
 }
+
 .chip.status-completed { background: #dcfce7; color: #166534; }
 .chip.status-in-progress { background: #e0f2fe; color: #0369a1; }
 .chip.status-on-hold { background: #fef9c3; color: #854d0e; }
 .chip.status-cancelled { background: #fee2e2; color: #991b1b; }
 .chip.status-not-started { background: #f3f4f6; color: #374151; }
 
-/* Expanded Tasks (Card View) */
+/* === Expanded Tasks Grid === */
 .gridWrapper {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
+
 .taskCard {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
   background: #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
   text-align: center;
 }
+
 .badgeRow {
   display: flex;
   justify-content: center;
@@ -140,6 +156,7 @@
   margin: 10px 0;
   flex-wrap: wrap;
 }
+
 .badge {
   padding: 5px 12px;
   border-radius: 14px;
@@ -147,7 +164,7 @@
   font-weight: 600;
 }
 
-/* Badge Colors */
+/* === Badge Colors === */
 .badge.product-ac { background: #dbeafe; color: #1e40af; }
 .badge.product-ref { background: #dcfce7; color: #166534; }
 .badge.product-mwo { background: #fef9c3; color: #92400e; }
@@ -159,37 +176,31 @@
 .badge.priority-low { background: #dcfce7; color: #166534; }
 .badge.priority-urgent { background: #ede9fe; color: #5b21b6; }
 
-.taskMeta {
-  font-size: 13px;
-  color: #374151;
-  margin: 4px 0;
-}
-.taskMetaSmall {
-  font-size: 12px;
-  color: #6b7280;
-}
+.taskMeta { font-size: 13px; color: #374151; margin: 4px 0; }
+.taskMetaSmall { font-size: 12px; color: #6b7280; }
 
-/* -------------------------------------- */
-/* Table View */
-/* -------------------------------------- */
+/* === Table View === */
 .taskTableWrapper {
   margin-top: 1rem;
   overflow-x: auto;
   max-height: 600px;
   border: 1px solid #ddd;
 }
+
 .taskTable {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
   min-width: 700px;
 }
+
 .taskTable th,
 .taskTable td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
 }
+
 .taskTable th {
   background: #f5f5f5;
   font-weight: bold;
@@ -224,12 +235,11 @@
   color: #2e7d32;
 }
 
-/* -------------------------------------- */
-/* View Toggle */
-/* -------------------------------------- */
+/* === View Toggle === */
 .viewToggle {
   margin: 1rem 0;
 }
+
 .viewToggle button {
   border: 1px solid #ccc;
   background: #fff;
@@ -238,127 +248,14 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
 .viewToggle button.active {
   background: #1976d2;
   color: #fff;
   border-color: #1976d2;
 }
 
-/* ---------- Modal ---------- */
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 16px;
-}
-.modalContent {
-  background: #ffffff;
-  width: 100%;
-  max-width: 640px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  overflow: hidden;
-}
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: white;
-}
-.modalHeader h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-.closeBtn {
-  border: none;
-  background: transparent;
-  font-size: 18px;
-  cursor: pointer;
-  line-height: 1;
-  padding: 4px;
-  color: white;
-}
-.closeBtn:hover { opacity: 0.8; }
-
-.modalBody {
-  padding: 20px;
-  color: #111827;
-  font-size: 14px;
-}
-.modalDetails {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
-}
-.modalDetails p {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  font-size: 13px;
-}
-.modalDetails p strong {
-  color: #374151;
-  font-size: 12px;
-  margin-bottom: 2px;
-}
-.modalDetails p.full {
-  grid-column: span 2;
-}
-
-/* Modal badges */
-.modalBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.modalBadge.status-completed { background: #dcfce7; color: #166534; }
-.modalBadge.status-in-progress { background: #e0f2fe; color: #0369a1; }
-.modalBadge.status-on-hold { background: #fef9c3; color: #854d0e; }
-.modalBadge.status-cancelled { background: #fee2e2; color: #991b1b; }
-.modalBadge.status-not-started { background: #f3f4f6; color: #374151; }
-.modalBadge.priority-high { background: #fee2e2; color: #991b1b; }
-.modalBadge.priority-medium { background: #fef9c3; color: #854d0e; }
-.modalBadge.priority-low { background: #dcfce7; color: #166534; }
-.modalBadge.priority-urgent { background: #ede9fe; color: #5b21b6; }
-
-.modalFooter {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-top: 1px solid #eee;
-  background: #f9fafb;
-}
-.navBtn {
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #1976d2;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-.navBtn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-.navBtn:hover:enabled {
-  background: #145ca1;
-}
-/* -------------------------------------- */
-/* Download Button (Table View) */
-/* -------------------------------------- */
+/* === Download Button === */
 .downloadContainer {
   text-align: right;
   margin-bottom: 10px;
@@ -380,51 +277,149 @@
   background-color: #157347;
 }
 
+/* === Modal === */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
 
-/* -------------------------------------- */
-/* Responsive tweaks for mobile */
-/* -------------------------------------- */
+.modalContent {
+  background: #ffffff;
+  width: 100%;
+  max-width: 640px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.closeBtn {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  color: white;
+}
+
+.closeBtn:hover { opacity: 0.8; }
+
+.modalBody {
+  padding: 20px;
+  color: #111827;
+  font-size: 14px;
+}
+
+.modalDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+.modalDetails p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.modalDetails p strong {
+  color: #374151;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.modalDetails p.full { grid-column: span 2; }
+
+/* === Modal badges === */
+.modalBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.modalBadge.status-completed { background: #dcfce7; color: #166534; }
+.modalBadge.status-in-progress { background: #e0f2fe; color: #0369a1; }
+.modalBadge.status-on-hold { background: #fef9c3; color: #854d0e; }
+.modalBadge.status-cancelled { background: #fee2e2; color: #991b1b; }
+.modalBadge.status-not-started { background: #f3f4f6; color: #374151; }
+.modalBadge.priority-high { background: #fee2e2; color: #991b1b; }
+.modalBadge.priority-medium { background: #fef9c3; color: #854d0e; }
+.modalBadge.priority-low { background: #dcfce7; color: #166534; }
+.modalBadge.priority-urgent { background: #ede9fe; color: #5b21b6; }
+
+.modalFooter {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid #eee;
+  background: #f9fafb;
+}
+
+.navBtn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #1976d2;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.navBtn:disabled { background: #ccc; cursor: not-allowed; }
+.navBtn:hover:enabled { background: #145ca1; }
+
+/* === Layout with Sidebar === */
+.teamMain {
+  margin-left: 260px;
+  margin-top: 0px;
+  width: calc(100% - 260px);
+  padding: 20px;
+  transition: margin 0.3s ease;
+}
+
+.filterSidebar.collapsed ~ .teamMain {
+  margin-left: 42px;
+  width: calc(100% - 42px);
+}
+
+/* === Responsive === */
 @media (max-width: 768px) {
-  .taskTableWrapper {
-    max-height: none;
-    overflow-x: auto;
-  }
-  .taskTable {
-    font-size: 12px;
-    min-width: 600px;
-  }
-  .taskTable th,
-  .taskTable td {
-    padding: 6px;
-  }
-  .ownerRow td {
-    font-size: 13px;
-    padding: 8px;
-  }
-
-  .taskTable th:nth-child(1),
-  .taskTable td:nth-child(1),
-  .taskTable th:nth-child(2),
-  .taskTable td:nth-child(2) {
-    display: none;
-  }
-
-  .userCard {
-    padding: 12px;
-  }
-  .avatarLarge {
-    width: 48px;
-    height: 48px;
-    font-size: 18px;
-  }
-  .userName {
-    font-size: 16px;
-  }
-  .taskCard {
-    padding: 12px;
-  }
-
-  .modalDetails {
-    grid-template-columns: 1fr;
-  }
+  .taskTableWrapper { max-height: none; overflow-x: auto; }
+  .taskTable { font-size: 12px; min-width: 600px; }
+  .taskTable th, .taskTable td { padding: 6px; }
+  .ownerRow td { font-size: 13px; padding: 8px; }
+  .taskTable th:nth-child(1), .taskTable td:nth-child(1),
+  .taskTable th:nth-child(2), .taskTable td:nth-child(2) { display: none; }
+  .userCard { padding: 12px; }
+  .avatarLarge { width: 48px; height: 48px; font-size: 18px; }
+  .userName { font-size: 16px; }
+  .taskCard { padding: 12px; }
+  .modalDetails { grid-template-columns: 1fr; }
 }

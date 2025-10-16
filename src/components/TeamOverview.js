@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import TaskFiltersSidebar from "../components/TaskFiltersSidebar";
 import "./TeamOverview.css";
 
 export default function TeamOverview() {
@@ -10,6 +11,7 @@ export default function TeamOverview() {
   const [expandedUserId, setExpandedUserId] = useState(null);
   const [viewMode, setViewMode] = useState("card");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({});
 
   // Modal states
   const [selectedTask, setSelectedTask] = useState(null);
@@ -20,7 +22,8 @@ export default function TeamOverview() {
   useEffect(() => {
     const fetchTasks = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+
+      let query = supabase
         .from("tasks")
         .select(`
           id,
@@ -36,6 +39,8 @@ export default function TeamOverview() {
           linked_folder,
           assigned_by_label,
           assigned_to,
+          department,
+          project_id,
           profiles:assigned_to (
             id,
             full_name,
@@ -45,12 +50,43 @@ export default function TeamOverview() {
         `)
         .order("created_at", { ascending: false });
 
+      // ✅ Apply filters from sidebar
+      const today = new Date();
+      if (filters.startDate && filters.endDate && filters.dateContext) {
+        query = query
+          .gte(filters.dateContext, filters.startDate.toISOString().slice(0, 10))
+          .lte(filters.dateContext, filters.endDate.toISOString().slice(0, 10));
+      }
+      if (filters.status) query = query.eq("status", filters.status);
+      if (filters.priority) query = query.eq("priority", filters.priority);
+      if (filters.department) query = query.eq("department", filters.department);
+      if (filters.product) query = query.eq("product", filters.product);
+      if (filters.project) query = query.eq("project_id", filters.project);
+      if (filters.assignee) query = query.eq("assigned_to", filters.assignee);
+
+      if (filters.quick === "Overdue") {
+        query = query.lt("deadline", today.toISOString().slice(0, 10)).neq("status", "Completed");
+      } else if (filters.quick === "Upcoming (7d)") {
+        const next7 = new Date();
+        next7.setDate(today.getDate() + 7);
+        query = query
+          .gte("deadline", today.toISOString().slice(0, 10))
+          .lte("deadline", next7.toISOString().slice(0, 10));
+      } else if (filters.quick === "Completed Recently") {
+        const past7 = new Date();
+        past7.setDate(today.getDate() - 7);
+        query = query
+          .gte("completion_date", past7.toISOString().slice(0, 10))
+          .lte("completion_date", today.toISOString().slice(0, 10));
+      }
+
+      const { data, error } = await query;
       if (!error && data) setTasks(data);
       setLoading(false);
     };
 
     fetchTasks();
-  }, []);
+  }, [filters]);
 
   const getBadgeClass = (type, value) => {
     if (!value) return "badge gray";
@@ -152,324 +188,355 @@ export default function TeamOverview() {
   // -------------------------------------
 
   return (
-    <div className="team-container">
-      <h2 className="pageTitle">👥 Team Tasks Overview</h2>
+    <div className="teamPage">
+      {/* ✅ Sidebar */}
+      <TaskFiltersSidebar onFilterChange={setFilters} />
 
-      {/* Search Box */}
-      <div className="searchBox">
-        <input
-          type="text"
-          placeholder="🔍 Search by name or department..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <button className="clearBtn" onClick={() => setSearchQuery("")}>
-            ✖
-          </button>
-        )}
-      </div>
+      {/* ✅ Main Container */}
+      <div className="teamMain">
+        <div className="team-container">
+          <h2 className="pageTitle">👥 Team Tasks Overview</h2>
 
-      {/* View Toggle */}
-      <div className="viewToggle">
-        <button
-          className={viewMode === "card" ? "active" : ""}
-          onClick={() => setViewMode("card")}
-        >
-          📇 Card View
-        </button>
-        <button
-          className={viewMode === "table" ? "active" : ""}
-          onClick={() => setViewMode("table")}
-        >
-          📋 Table View
-        </button>
-      </div>
+          {/* Search Box */}
+          <div className="searchBox">
+            <input
+              type="text"
+              placeholder="🔍 Search by name or department..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="clearBtn" onClick={() => setSearchQuery("")}>
+                ✖
+              </button>
+            )}
+          </div>
 
-      {/* ✅ Download Button only in Table View */}
-      {viewMode === "table" && (
-        <div className="downloadContainer">
-          <button onClick={downloadTable} className="downloadBtn">
-            ⬇️ Download Table (Excel)
-          </button>
-        </div>
-      )}
+          {/* View Toggle */}
+          <div className="viewToggle">
+            <button
+              className={viewMode === "card" ? "active" : ""}
+              onClick={() => setViewMode("card")}
+            >
+              📇 Card View
+            </button>
+            <button
+              className={viewMode === "table" ? "active" : ""}
+              onClick={() => setViewMode("table")}
+            >
+              📋 Table View
+            </button>
+          </div>
 
-      {/* Card View */}
-      {viewMode === "card" ? (
-        <>
-          {users.map(({ user, tasks }) => {
-            const summary = {
-              total: tasks.length,
-              byStatus: tasks.reduce((acc, t) => {
-                acc[t.status] = (acc[t.status] || 0) + 1;
-                return acc;
-              }, {}),
-            };
+          {/* ✅ Download Button only in Table View */}
+          {viewMode === "table" && (
+            <div className="downloadContainer">
+              <button onClick={downloadTable} className="downloadBtn">
+                ⬇️ Download Table (Excel)
+              </button>
+            </div>
+          )}
 
-            const sortedTasks = [...tasks].sort((a, b) => {
-              if (a.status === "Completed" && b.status !== "Completed") return 1;
-              if (a.status !== "Completed" && b.status === "Completed") return -1;
-              const maxDate = new Date(8640000000000000);
-              const aDeadline = a.deadline ? new Date(a.deadline) : maxDate;
-              const bDeadline = b.deadline ? new Date(b.deadline) : maxDate;
-              return aDeadline - bDeadline;
-            });
+          {/* Existing Card/Table Rendering Logic (Unchanged) */}
+          {viewMode === "card" ? (
+            <>
+              {users.map(({ user, tasks }) => {
+                const summary = {
+                  total: tasks.length,
+                  byStatus: tasks.reduce((acc, t) => {
+                    acc[t.status] = (acc[t.status] || 0) + 1;
+                    return acc;
+                  }, {}),
+                };
 
-            return (
-              <div key={user.id || user.full_name} className="userSection">
-                <div
-                  className={`userCard ${expandedUserId === user.id ? "expanded" : ""}`}
-                  onClick={() =>
-                    setExpandedUserId(expandedUserId === user.id ? null : user.id)
-                  }
-                >
-                  <div className="userCardContent">
-                    <div className="avatarLarge">
-                      {user.full_name?.charAt(0) || "?"}
+                const sortedTasks = [...tasks].sort((a, b) => {
+                  if (a.status === "Completed" && b.status !== "Completed") return 1;
+                  if (a.status !== "Completed" && b.status === "Completed") return -1;
+                  const maxDate = new Date(8640000000000000);
+                  const aDeadline = a.deadline ? new Date(a.deadline) : maxDate;
+                  const bDeadline = b.deadline ? new Date(b.deadline) : maxDate;
+                  return aDeadline - bDeadline;
+                });
+
+                return (
+                  <div key={user.id || user.full_name} className="userSection">
+                    <div
+                      className={`userCard ${
+                        expandedUserId === user.id ? "expanded" : ""
+                      }`}
+                      onClick={() =>
+                        setExpandedUserId(
+                          expandedUserId === user.id ? null : user.id
+                        )
+                      }
+                    >
+                      <div className="userCardContent">
+                        <div className="avatarLarge">
+                          {user.full_name?.charAt(0) || "?"}
+                        </div>
+                        <h3 className="userName">{user.full_name}</h3>
+                        <p className="userDept">{user.department}</p>
+                        <p className="taskSummary">
+                          Total Tasks: <strong>{summary.total}</strong>
+                        </p>
+                        <div className="statusChips">
+                          {Object.entries(summary.byStatus).map(([k, v]) => (
+                            <span
+                              key={k}
+                              className={`chip status-${String(k)
+                                .toLowerCase()
+                                .replace(" ", "-")}`}
+                            >
+                              {k}: {v}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="userName">{user.full_name}</h3>
-                    <p className="userDept">{user.department}</p>
-                    <p className="taskSummary">
-                      Total Tasks: <strong>{summary.total}</strong>
-                    </p>
-                    <div className="statusChips">
-                      {Object.entries(summary.byStatus).map(([k, v]) => (
-                        <span
-                          key={k}
-                          className={`chip status-${String(k)
-                            .toLowerCase()
-                            .replace(" ", "-")}`}
+
+                    {expandedUserId === user.id && (
+                      <div className="gridWrapper">
+                        {sortedTasks.map((task, idx) => (
+                          <div
+                            key={task.id}
+                            className="taskCard clickable"
+                            onClick={() => {
+                              setVisibleTasks(sortedTasks);
+                              setSelectedIndex(idx);
+                              setSelectedTask(task);
+                            }}
+                          >
+                            <strong>{task.task_title ?? "(Untitled)"}</strong>
+                            <div className="badgeRow">
+                              <span
+                                className={getBadgeClass("product", task.product)}
+                              >
+                                {task.product}
+                              </span>
+                              <span
+                                className={getBadgeClass("status", task.status)}
+                              >
+                                {task.status}
+                              </span>
+                              <span
+                                className={getBadgeClass("priority", task.priority)}
+                              >
+                                {task.priority}
+                              </span>
+                            </div>
+                            <p className="taskMeta">
+                              📅{" "}
+                              {task.deadline
+                                ? task.deadline.slice(0, 10)
+                                : "No deadline"}
+                            </p>
+                            <p className="taskMetaSmall">
+                              👤 Assigned By: {task.assigned_by_label || "N/A"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            /* Table View */
+            <div className="taskTableWrapper">
+              <table className="taskTable">
+                <thead>
+                  <tr>
+                    <th>S/N</th>
+                    <th>Owner</th>
+                    <th>Title</th>
+                    <th>Product</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Task Type</th>
+                    <th>Start Date</th>
+                    <th>Deadline</th>
+                    <th>Completion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(({ user, tasks }) => (
+                    <React.Fragment key={user.id || user.full_name}>
+                      <tr className="ownerRow">
+                        <td colSpan={10}>
+                          👤 <strong>{user.full_name}</strong> (
+                          {user.department})
+                        </td>
+                      </tr>
+                      {tasks.map((task, idx) => (
+                        <tr
+                          key={task.id}
+                          className={
+                            task.status === "Completed"
+                              ? "taskRow completedTask"
+                              : "taskRow"
+                          }
                         >
-                          {k}: {v}
-                        </span>
+                          <td>{idx + 1}</td>
+                          <td>{user.full_name}</td>
+                          <td>{task.task_title ?? "(Untitled)"}</td>
+                          <td>{task.product || "-"}</td>
+                          <td>{task.status || "-"}</td>
+                          <td>{task.priority || "-"}</td>
+                          <td>{task.task_type || "-"}</td>
+                          <td>{fmtDate(task.start_date)}</td>
+                          <td>{fmtDate(task.deadline)}</td>
+                          <td>{fmtDate(task.completion_date)}</td>
+                        </tr>
                       ))}
-                    </div>
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Modal */}
+          {selectedTask && (
+            <div className="modalOverlay" onClick={() => setSelectedTask(null)}>
+              <div
+                className="modalContent"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modalHeader">
+                  <h3>{selectedTask.task_title ?? "(Untitled Task)"}</h3>
+                  <button
+                    className="closeBtn"
+                    onClick={() => setSelectedTask(null)}
+                  >
+                    ✖
+                  </button>
+                </div>
+
+                <div className="modalBody">
+                  <div className="modalDetails">
+                    <p>
+                      <strong>Product</strong>
+                      <span>{selectedTask.product || "-"}</span>
+                    </p>
+                    <p>
+                      <strong>Status</strong>
+                      <span>
+                        {selectedTask.status ? (
+                          <span
+                            className={`modalBadge status-${selectedTask.status
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
+                          >
+                            {selectedTask.status}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Priority</strong>
+                      <span>
+                        {selectedTask.priority ? (
+                          <span
+                            className={`modalBadge priority-${selectedTask.priority
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
+                          >
+                            {selectedTask.priority}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Task Type</strong>
+                      <span>{selectedTask.task_type || "-"}</span>
+                    </p>
+                    <p>
+                      <strong>Start Date</strong>
+                      <span>{fmtDate(selectedTask.start_date)}</span>
+                    </p>
+                    <p>
+                      <strong>Deadline</strong>
+                      <span>{fmtDate(selectedTask.deadline)}</span>
+                    </p>
+                    <p>
+                      <strong>Completion Date</strong>
+                      <span>{fmtDate(selectedTask.completion_date)}</span>
+                    </p>
+                    <p>
+                      <strong>Assigned To</strong>
+                      <span>{selectedTask.profiles?.full_name || "Unknown"}</span>
+                    </p>
+                    <p>
+                      <strong>Department</strong>
+                      <span>{selectedTask.profiles?.department || "-"}</span>
+                    </p>
+                    <p>
+                      <strong>Assigned By</strong>
+                      <span>{selectedTask.assigned_by_label || "N/A"}</span>
+                    </p>
+                    <p className="full">
+                      <strong>Remarks</strong>
+                      <span>{selectedTask.remarks || "-"}</span>
+                    </p>
+                    <p className="full">
+                      <strong>Linked Folder</strong>
+                      {selectedTask.linked_folder ? (
+                        <a
+                          href={selectedTask.linked_folder}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            color: "#1976d2",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          Open Folder
+                        </a>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </p>
                   </div>
                 </div>
 
-                {expandedUserId === user.id && (
-                  <div className="gridWrapper">
-                    {sortedTasks.map((task, idx) => (
-                      <div
-                        key={task.id}
-                        className="taskCard clickable"
-                        onClick={() => {
-                          setVisibleTasks(sortedTasks);
-                          setSelectedIndex(idx);
-                          setSelectedTask(task);
-                        }}
-                      >
-                        <strong>{task.task_title ?? "(Untitled)"}</strong>
-                        <div className="badgeRow">
-                          <span className={getBadgeClass("product", task.product)}>
-                            {task.product}
-                          </span>
-                          <span className={getBadgeClass("status", task.status)}>
-                            {task.status}
-                          </span>
-                          <span className={getBadgeClass("priority", task.priority)}>
-                            {task.priority}
-                          </span>
-                        </div>
-                        <p className="taskMeta">
-                          📅 {task.deadline ? task.deadline.slice(0, 10) : "No deadline"}
-                        </p>
-                        <p className="taskMetaSmall">
-                          👤 Assigned By: {task.assigned_by_label || "N/A"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </>
-      ) : (
-        /* Table View */
-        <div className="taskTableWrapper">
-          <table className="taskTable">
-            <thead>
-              <tr>
-                <th>S/N</th>
-                <th>Owner</th>
-                <th>Title</th>
-                <th>Product</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Task Type</th>
-                <th>Start Date</th>
-                <th>Deadline</th>
-                <th>Completion</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(({ user, tasks }) => (
-                <React.Fragment key={user.id || user.full_name}>
-                  <tr className="ownerRow">
-                    <td colSpan={10}>
-                      👤 <strong>{user.full_name}</strong> ({user.department})
-                    </td>
-                  </tr>
-                  {tasks.map((task, idx) => (
-                    <tr
-                      key={task.id}
-                      className={
-                        task.status === "Completed"
-                          ? "taskRow completedTask"
-                          : "taskRow"
+                <div className="modalFooter">
+                  <button
+                    className="navBtn"
+                    disabled={selectedIndex === 0}
+                    onClick={() => {
+                      if (selectedIndex > 0) {
+                        const newIndex = selectedIndex - 1;
+                        setSelectedIndex(newIndex);
+                        setSelectedTask(visibleTasks[newIndex]);
                       }
-                    >
-                      <td>{idx + 1}</td>
-                      <td>{user.full_name}</td>
-                      <td>{task.task_title ?? "(Untitled)"}</td>
-                      <td>{task.product || "-"}</td>
-                      <td>{task.status || "-"}</td>
-                      <td>{task.priority || "-"}</td>
-                      <td>{task.task_type || "-"}</td>
-                      <td>{fmtDate(task.start_date)}</td>
-                      <td>{fmtDate(task.deadline)}</td>
-                      <td>{fmtDate(task.completion_date)}</td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Modal */}
-      {selectedTask && (
-        <div className="modalOverlay" onClick={() => setSelectedTask(null)}>
-          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHeader">
-              <h3>{selectedTask.task_title ?? "(Untitled Task)"}</h3>
-              <button className="closeBtn" onClick={() => setSelectedTask(null)}>
-                ✖
-              </button>
-            </div>
-
-            <div className="modalBody">
-              <div className="modalDetails">
-                <p>
-                  <strong>Product</strong>
-                  <span>{selectedTask.product || "-"}</span>
-                </p>
-                <p>
-                  <strong>Status</strong>
-                  <span>
-                    {selectedTask.status ? (
-                      <span
-                        className={`modalBadge status-${selectedTask.status
-                          .toLowerCase()
-                          .replace(/\s+/g, "-")}`}
-                      >
-                        {selectedTask.status}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </span>
-                </p>
-                <p>
-                  <strong>Priority</strong>
-                  <span>
-                    {selectedTask.priority ? (
-                      <span
-                        className={`modalBadge priority-${selectedTask.priority
-                          .toLowerCase()
-                          .replace(/\s+/g, "-")}`}
-                      >
-                        {selectedTask.priority}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </span>
-                </p>
-                <p>
-                  <strong>Task Type</strong>
-                  <span>{selectedTask.task_type || "-"}</span>
-                </p>
-                <p>
-                  <strong>Start Date</strong>
-                  <span>{fmtDate(selectedTask.start_date)}</span>
-                </p>
-                <p>
-                  <strong>Deadline</strong>
-                  <span>{fmtDate(selectedTask.deadline)}</span>
-                </p>
-                <p>
-                  <strong>Completion Date</strong>
-                  <span>{fmtDate(selectedTask.completion_date)}</span>
-                </p>
-                <p>
-                  <strong>Assigned To</strong>
-                  <span>{selectedTask.profiles?.full_name || "Unknown"}</span>
-                </p>
-                <p>
-                  <strong>Department</strong>
-                  <span>{selectedTask.profiles?.department || "-"}</span>
-                </p>
-                <p>
-                  <strong>Assigned By</strong>
-                  <span>{selectedTask.assigned_by_label || "N/A"}</span>
-                </p>
-                <p className="full">
-                  <strong>Remarks</strong>
-                  <span>{selectedTask.remarks || "-"}</span>
-                </p>
-                <p className="full">
-                  <strong>Linked Folder</strong>
-                  {selectedTask.linked_folder ? (
-                    <a
-                      href={selectedTask.linked_folder}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: "#1976d2", textDecoration: "underline" }}
-                    >
-                      Open Folder
-                    </a>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </p>
+                    }}
+                  >
+                    ← Previous
+                  </button>
+                  <button
+                    className="navBtn"
+                    disabled={selectedIndex === visibleTasks.length - 1}
+                    onClick={() => {
+                      if (selectedIndex < visibleTasks.length - 1) {
+                        const newIndex = selectedIndex + 1;
+                        setSelectedIndex(newIndex);
+                        setSelectedTask(visibleTasks[newIndex]);
+                      }
+                    }}
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="modalFooter">
-              <button
-                className="navBtn"
-                disabled={selectedIndex === 0}
-                onClick={() => {
-                  if (selectedIndex > 0) {
-                    const newIndex = selectedIndex - 1;
-                    setSelectedIndex(newIndex);
-                    setSelectedTask(visibleTasks[newIndex]);
-                  }
-                }}
-              >
-                ← Previous
-              </button>
-              <button
-                className="navBtn"
-                disabled={selectedIndex === visibleTasks.length - 1}
-                onClick={() => {
-                  if (selectedIndex < visibleTasks.length - 1) {
-                    const newIndex = selectedIndex + 1;
-                    setSelectedIndex(newIndex);
-                    setSelectedTask(visibleTasks[newIndex]);
-                  }
-                }}
-              >
-                Next →
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

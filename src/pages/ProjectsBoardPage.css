@@ -109,3 +109,55 @@
   border-left: 1px solid #e5e7eb;
   overflow-y: auto;
 }
+/* ---------- Panel Balance ---------- */
+.projects-board-page {
+  gap: 0;
+}
+
+.main-panel {
+  padding: 12px 18px;
+}
+
+.tab-header {
+  margin-bottom: 10px;
+}
+
+.activity-panel {
+  width: 340px;
+  border-left: 1px solid #e5e7eb;
+  background: linear-gradient(to bottom, #f8fafc, #ffffff);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.03);
+}
+/* ---------- Global Button Alignment ---------- */
+.section-actions,
+.sidebar-header,
+.project-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Standard button style baseline */
+.kanban-btn,
+.add-btn,
+.refresh-btn {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* hover glow for visual balance */
+.kanban-btn:hover,
+.add-btn:hover,
+.refresh-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
