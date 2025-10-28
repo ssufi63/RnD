@@ -225,51 +225,32 @@
 .rc-text { color: #374151; }
 .rc-time { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
 
-.project-title-row {
-  display: flex;
-  justify-content: space-between; /* keeps title left, buttons right */
-  align-items: center;
-  background: linear-gradient(to right, #f9fafb, #ffffff);
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 12px;
+/* ✅ Completed task styles */
+.completed-task {
+  border-left: 5px solid #28a745;
+  background: #f6fff6;
+  color: #666;
+  opacity: 0.85;
+  transition: background 0.3s, opacity 0.3s;
 }
 
-.project-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
+.completed-task:hover {
+  opacity: 1;
+  background: #e8ffe8;
 }
 
-.project-title .muted {
+.completed-task .task-name {
+  /* text-decoration: line-through; */
   font-weight: 500;
-  color: #6b7280;
+  color: #4caf50;
 }
 
-/* make sure the right side buttons align visually */
-.project-title-row .kanban-btn {
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  font-size: 0.85rem;
+.checkmark {
+  color: #28a745;
+  font-weight: bold;
+  margin-right: 6px;
 }
 
-.kanban-btn.purple {
-  background: #9333ea;
-}
-.kanban-btn.purple:hover {
-  background: #7e22ce;
-}
-.kanban-btn.purple {
-  background: #9333ea;
-}
-.kanban-btn.purple:hover {
-  background: #7e22ce;
-}
 
 
 /* responsive tweaks */

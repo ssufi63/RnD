@@ -1,131 +1,120 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
-import toast from "react-hot-toast";
 import "./TaskDetailModal.css";
 
-export default function TaskDetailModal({ task, onClose }) {
+/**
+ * Props:
+ * - task (object, required)
+ * - onClose (fn, required)
+ * - onTaskUpdated (fn, optional)  -> parent should refetch tasks/remarks
+ */
+export default function TaskDetailModal({ task, onClose, onTaskUpdated }) {
   const [assignedUser, setAssignedUser] = useState(null);
   const [creator, setCreator] = useState(null);
-  const [remarks, setRemarks] = useState([]);
-  const [newRemark, setNewRemark] = useState("");
-  const [systemLogs, setSystemLogs] = useState([]);
-  const [showLogs, setShowLogs] = useState(false);
+
+  // editing toggles only the fields below; no assign/remarks here
   const [editing, setEditing] = useState(false);
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState("");
 
-  // ✅ Fetch current user + role
+  // editable fields
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("");
+  const [completionDate, setCompletionDate] = useState("");
+
+  // UI overlays
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // hydrate editable state on open/change
   useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user) {
-        setUser(userData.user);
-        const { data } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userData.user.id)
-          .single();
-        setRole(data?.role || "user");
-      }
-    })();
-  }, []);
-
-  // ✅ Fetch related data
-  useEffect(() => {
-    const fetchProfilesAndRemarks = async () => {
-      if (task?.assigned_to) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name, email")
-          .eq("id", task.assigned_to)
-          .single();
-        setAssignedUser(data);
-      }
-
-      if (task?.created_by) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name, email")
-          .eq("id", task.created_by)
-          .single();
-        setCreator(data);
-      }
-
-      // 🔹 Fetch remarks
-      const { data: remarkData } = await supabase
-        .from("task_remarks")
-        .select(
-          "id, remark, type, created_at, user_id, profiles(full_name)"
-        )
-        .eq("task_id", task.id)
-        .order("created_at", { ascending: false });
-      setRemarks(remarkData || []);
-
-      // 🔹 Fetch system logs (stored as system remarks)
-      const { data: sysLogs } = await supabase
-        .from("task_remarks")
-        .select(
-          "id, remark, created_at, type"
-        )
-        .eq("task_id", task.id)
-        .eq("type", "system")
-        .order("created_at", { ascending: false });
-      setSystemLogs(sysLogs || []);
-    };
-
-    fetchProfilesAndRemarks();
-
-    const ch = supabase
-      .channel(`realtime-task-${task.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "task_remarks", filter: `task_id=eq.${task.id}` },
-        (payload) => {
-          if (payload.new) {
-            setRemarks((prev) => [payload.new, ...prev]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(ch);
+    if (!task) return;
+    setDescription(task.description || "");
+    setStatus(task.status || "");
+    // store as yyyy-mm-dd string for the input
+    const cd =
+      task.completion_date
+        ? new Date(task.completion_date).toISOString().slice(0, 10)
+        : "";
+    setCompletionDate(cd);
   }, [task]);
 
-  // ✅ Handle adding a new remark
-  const handleAddRemark = async (e) => {
-    e.preventDefault();
-    if (!newRemark.trim()) return;
-    try {
-      const { error } = await supabase.from("task_remarks").insert([
-        {
-          task_id: task.id,
-          user_id: user?.id || null,
-          remark: newRemark.trim(),
-          type: "manual",
-        },
-      ]);
-      if (error) throw error;
-      setNewRemark("");
-      toast.success("Remark added");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to add remark");
-    }
+  // load related profiles for display
+  useEffect(() => {
+    if (!task) return;
+    const loadProfiles = async () => {
+      if (task.assigned_to) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name,email")
+          .eq("id", task.assigned_to)
+          .single();
+        setAssignedUser(data || null);
+      } else {
+        setAssignedUser(null);
+      }
+
+      if (task.created_by) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name,email")
+          .eq("id", task.created_by)
+          .single();
+        setCreator(data || null);
+      } else {
+        setCreator(null);
+      }
+    };
+    loadProfiles();
+  }, [task]);
+
+// ✅ Final working save for kanban_tasks (with completion_date)
+const handleSave = async () => {
+  if (!task?.id) return;
+
+  const payload = {
+    description: description?.trim() || null,
+    status: status || null,
+    completion_date: completionDate || null, // ← newly added column
+    updated_at: new Date().toISOString(),
   };
 
-  // ✅ Handle task editing (basic inline example)
-  const handleEditTask = async () => {
-    if (!editing) return setEditing(true);
-    try {
-      const { error } = await supabase
-        .from("kanban_tasks")
-        .update({ description: task.description })
-        .eq("id", task.id);
-      if (error) throw error;
-      toast.success("Task updated");
-      setEditing(false);
-    } catch (err) {
-      toast.error("Failed to update task");
+  const { error } = await supabase
+    .from("kanban_tasks")
+    .update(payload)
+    .eq("id", task.id);
+
+  if (error) {
+    console.error("Save error:", error);
+    alert("Save failed: " + error.message);
+  } else {
+    setEditing(false);
+    setShowSuccess(true);
+
+    // Refresh the parent after save
+    onTaskUpdated && onTaskUpdated();
+
+    // Hide success tick after 1 s
+    setTimeout(() => setShowSuccess(false), 1000);
+  }
+};
+
+
+  // Delete with confirm
+  const handleDelete = async () => {
+    if (!task?.id) return;
+    const { error } = await supabase
+      .from("kanban_tasks")
+      .delete()
+      .eq("id", task.id);
+
+    if (!error) {
+      setShowDeleteConfirm(false);
+      setShowSuccess(true);
+      // let parent refresh & close after the tick
+      onTaskUpdated && onTaskUpdated();
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose && onClose();
+      }, 1000);
     }
   };
 
@@ -135,33 +124,34 @@ export default function TaskDetailModal({ task, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
-        onClick={(e) => e.stopPropagation()} // prevent backdrop click
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="modal-header">
           <h2>{task.title}</h2>
-          <button className="close-btn" onClick={onClose}>
-            ✕
-          </button>
+          <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
+        {/* Body */}
         <div className="modal-body">
+          {/* Description */}
           <p className="task-detail">
             <strong>Description:</strong>{" "}
             {editing ? (
               <textarea
-                value={task.description || ""}
-                onChange={(e) => (task.description = e.target.value)}
                 className="modal-textarea"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             ) : (
-              task.description || "—"
+              description || "—"
             )}
           </p>
 
+          {/* Assigned / Creator (read-only here) */}
           {assignedUser && (
             <p className="task-detail">
-              <strong>Assigned To:</strong> {assignedUser.full_name} (
-              {assignedUser.email})
+              <strong>Assigned To:</strong> {assignedUser.full_name} ({assignedUser.email})
             </p>
           )}
           {creator && (
@@ -169,6 +159,8 @@ export default function TaskDetailModal({ task, onClose }) {
               <strong>Created By:</strong> {creator.full_name} ({creator.email})
             </p>
           )}
+
+          {/* Dates (read-only) */}
           {task.start_date && (
             <p className="task-detail">
               <strong>Start Date:</strong>{" "}
@@ -181,16 +173,45 @@ export default function TaskDetailModal({ task, onClose }) {
               {new Date(task.deadline).toLocaleDateString()}
             </p>
           )}
-          {task.status && (
-            <p className="task-detail">
-              <strong>Status:</strong> {task.status}
-            </p>
-          )}
-          {task.priority_id && (
-            <p className="task-detail">
-              <strong>Priority:</strong> {task.priority_id}
-            </p>
-          )}
+
+          {/* Status */}
+          <p className="task-detail">
+            <strong>Status:</strong>{" "}
+            {editing ? (
+              <select
+                className="modal-select"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="">Select</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+            ) : (
+              status || "—"
+            )}
+          </p>
+
+          {/* Completion Date */}
+          <p className="task-detail">
+            <strong>Completion Date:</strong>{" "}
+            {editing ? (
+              <input
+                className="modal-input"
+                type="date"
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
+              />
+            ) : (
+              task.completion_date
+                ? new Date(task.completion_date).toLocaleDateString()
+                : "—"
+            )}
+          </p>
+
+          {/* Created / Updated */}
           <p className="task-detail small">
             <strong>Created:</strong>{" "}
             {new Date(task.created_at).toLocaleString()}
@@ -201,68 +222,48 @@ export default function TaskDetailModal({ task, onClose }) {
           </p>
         </div>
 
-        {/* 🟩 Step 3 - Action Buttons */}
+        {/* Actions */}
         <div className="modal-actions">
-          {["admin", "manager", "team_leader"].includes(role) && (
-            <button className="btn-blue" onClick={handleEditTask}>
-              {editing ? "Save" : "Edit"}
+          {editing ? (
+            <button className="btn-blue" onClick={handleSave}>Save</button>
+          ) : (
+            <button className="btn-blue" onClick={() => setEditing(true)}>Edit</button>
+          )}
+          <button className="btn-red" onClick={() => setShowDeleteConfirm(true)}>
+            Delete
+          </button>
+          {!editing && (
+            <button className="btn-gray" onClick={onClose}>
+              Close
             </button>
           )}
-          <button
-            className="btn-gray"
-            onClick={() => setShowLogs((s) => !s)}
-          >
-            {showLogs ? "Hide History" : "View History"}
-          </button>
         </div>
 
-        {/* 🟦 Add Remark Section */}
-        <form onSubmit={handleAddRemark} className="remark-form">
-          <textarea
-            value={newRemark}
-            onChange={(e) => setNewRemark(e.target.value)}
-            placeholder="Add a remark..."
-            className="remark-input"
-          />
-          <button className="btn-blue" disabled={!newRemark.trim()}>
-            Add Remark
-          </button>
-        </form>
-
-        {/* 🟨 Display Remarks */}
-        <div className="remarks-section">
-          <h4>Remarks</h4>
-          {remarks.length === 0 ? (
-            <p className="empty-text">No remarks yet.</p>
-          ) : (
-            remarks.map((r) => (
-              <div key={r.id} className="remark-item">
-                <strong>{r.profiles?.full_name || "Unknown"}:</strong>{" "}
-                {r.remark}
-                <div className="remark-time">
-                  {new Date(r.created_at).toLocaleString()}
-                </div>
+        {/* Delete confirm */}
+        {showDeleteConfirm && (
+          <div className="delete-confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="delete-confirm-box" onClick={(e) => e.stopPropagation()}>
+              <h3>⚠️ Confirm Deletion</h3>
+              <p>This action cannot be undone.</p>
+              <div className="confirm-actions">
+                <button className="btn-red" onClick={handleDelete}>Yes, Delete</button>
+                <button className="btn-gray" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          </div>
+        )}
 
-        {/* 🟥 System Logs */}
-        {showLogs && (
-          <div className="logs-section">
-            <h4>System Logs</h4>
-            {systemLogs.length === 0 ? (
-              <p className="empty-text">No logs yet.</p>
-            ) : (
-              systemLogs.map((l) => (
-                <div key={l.id} className="log-item">
-                  <span>{l.remark}</span>
-                  <span className="remark-time">
-                    {new Date(l.created_at).toLocaleString()}
-                  </span>
-                </div>
-              ))
-            )}
+        {/* Success overlay (1s) */}
+        {showSuccess && (
+          <div className="success-overlay">
+            <div className="success-checkmark">
+              <div className="check-icon">
+                <span className="icon-line line-tip"></span>
+                <span className="icon-line line-long"></span>
+                <div className="icon-circle"></div>
+                <div className="icon-fix"></div>
+              </div>
+            </div>
           </div>
         )}
       </div>
