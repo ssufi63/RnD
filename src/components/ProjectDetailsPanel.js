@@ -231,14 +231,6 @@ useEffect(() => {
 
   return (
     <div className="project-details-wrapper">
-      {/* Members row */}
-      {members.length > 0 && (
-        <div className="member-row">
-          {members.map((m) => (
-            <span key={m.user_id}>{m.profiles?.full_name || "Unknown"}</span>
-          ))}
-        </div>
-      )}
 
       {/* TASKS */}
       <section className="details-section">
