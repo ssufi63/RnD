@@ -5,22 +5,6 @@
   color: #1f2937;
 }
 
-/* ===== TITLE ===== */
-.project-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-}
-.project-title .muted {
-  font-weight: 500;
-  color: #6b7280;
-}
-
 /* ===== MEMBERS ROW ===== */
 .member-row {
   display: flex;
@@ -30,7 +14,6 @@
   color: #374151;
   font-size: 0.9rem;
 }
-
 .member-row span::after {
   content: "|";
   margin: 0 6px;
@@ -41,49 +24,15 @@
 }
 
 /* ===== SECTIONS ===== */
-.details-section {
-  margin-bottom: 1.25rem;
-}
+.details-section { margin-bottom: 1.25rem; }
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;
 }
-.section-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-header h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.section-icon {
-  font-size: 1.2rem;
-}
+.section-left { display: flex; align-items: center; gap: 8px; }
+.section-header h3 { font-size: 1.1rem; font-weight: 600; }
+.section-icon { font-size: 1.2rem; }
 .task-icon { color: #2563eb; }
-.remark-icon { color: #9333ea; }
-
-.kanban-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: #fff;
-  transition: all 0.2s ease;
-  margin-left: 6px;
-}
-.kanban-btn.blue { background: #2563eb; }
-.kanban-btn.blue:hover { background: #1d4ed8; }
-.kanban-btn.green { background: #16a34a; }
-.kanban-btn.green:hover { background: #15803d; }
-
-.empty-text {
-  color: #9ca3af;
-  font-style: italic;
-}
+.empty-text { color: #9ca3af; font-style: italic; }
 
 /* ===== TASK LIST ===== */
 .task-list { display: flex; flex-direction: column; gap: 10px; }
@@ -95,38 +44,57 @@
   border-radius: 8px;
   padding: 10px 16px;
   display: flex;
-  flex-direction: column; /* stack content and expansion */
+  flex-direction: column;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: 0.2s ease;
 }
 .task-row:hover { transform: translateY(-2px); }
-.task-row.selected {
-  border-color: #6366f1;
-  background: #eef2ff;
-}
 
+/* ===== SUMMARY (collapsed) ===== */
 .task-summary {
   display: grid;
-  grid-template-columns: 40% 20% 30%;
+  grid-template-columns: 18% 32% 18% 32%; /* assignee | name | date | last remark */
   align-items: center;
   gap: 10px;
   min-width: 0;
   cursor: pointer;
   position: relative;
+  text-align: left;
+}
+
+/* Assignee pill */
+.task-assignee {
+  display: inline-block;
+  background: #e0f2fe;        /* light sky blue */
+  color: #0369a1;             /* darker blue text */
+  padding: 4px 10px;
+  border-radius: 9999px;      /* pill */
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 90px;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 0 0 1px #bae6fd inset; /* subtle border */
 }
 
 .task-name {
   font-weight: 600;
   color: #1e293b;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-align: left;
+  padding-left: 4px;
 }
 .task-deadline {
   font-size: 0.85rem; color: #2563eb; font-weight: 500;
-  text-align: right; white-space: nowrap;
+  text-align: left; white-space: nowrap;
 }
 .task-remark-inline {
   font-size: 0.85rem; color: #6b7280;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-align: left;
 }
 
 /* expand arrow */
@@ -134,19 +102,13 @@
   position: absolute;
   top: 8px;
   right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #2563eb;
-  font-size: 1.4rem;
-  transition: transform 0.2s ease;
-  z-index: 2;
+  background: none; border: none; cursor: pointer;
+  color: #2563eb; font-size: 1.4rem;
+  transition: transform 0.2s ease; z-index: 2;
 }
-.expand-btn-large:hover {
-  transform: scale(1.15);
-}
+.expand-btn-large:hover { transform: scale(1.15); }
 
-/* compact inline expansion under the summary */
+/* ===== INLINE (expanded) ===== */
 .task-inline {
   width: 100%;
   background: #f9fafb;
@@ -161,18 +123,11 @@
   grid-template-columns: repeat(4, minmax(120px, 1fr));
   gap: 10px;
 }
-.ti-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-bottom: 2px;
-}
+.ti-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 2px; }
 .ti-value { font-size: 0.9rem; color: #111827; }
 
 .task-inline-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
 }
 .btn-outline {
   background: #fff; color: #111827; border: 1px solid #d1d5db;
@@ -181,13 +136,10 @@
 .btn-outline:hover { background: #f3f4f6; }
 
 /* assign + remark inline controls */
-.assign-inline {
-  margin-top: 8px;
-}
+.assign-inline { margin-top: 8px; }
 .assign-inline select {
   border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 8px;
 }
-
 .remark-inline { margin-top: 8px; }
 .remark-inline textarea {
   width: 100%; min-height: 60px;
@@ -195,71 +147,43 @@
 }
 .remark-inline-actions { margin-top: 6px; display: flex; gap: 8px; }
 .btn-blue.small, .btn-gray.small { padding: 6px 10px; font-size: 0.8rem; }
-.btn-blue.small {
-  background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;
-}
+.btn-blue.small { background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
 .btn-blue.small:hover { background: #1d4ed8; }
-.btn-gray.small {
-  background: #f3f4f6; color: #111827; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
-}
+.btn-gray.small { background: #f3f4f6; color: #111827; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; }
 .btn-gray.small:hover { background: #e5e7eb; }
 
-/* ===== TWO-COLUMN REMARKS (COMPACT) ===== */
-.two-column {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-}
-.column {
-  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;
-}
-.column h3 {
-  font-size: 1rem; font-weight: 600; color: #1e293b; margin-bottom: 8px;
-}
-
-/* compact remark chips */
-.remarks-compact { display: flex; flex-direction: column; gap: 8px; }
+/* Remarks: one-row chips */
+.task-remarks-inline h4 { margin: 10px 0 8px; font-size: 0.95rem; }
 .remark-chip {
+  display: flex; justify-content: space-between; align-items: center;
   background: #f8fafc; border-left: 3px solid #8b5cf6; border-radius: 6px;
-  padding: 8px 10px;
+  padding: 6px 10px; gap: 10px;
 }
-.rc-line { font-size: 0.9rem; color: #111827; }
+.rc-line {
+  font-size: 0.9rem; color: #111827;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .rc-text { color: #374151; }
-.rc-time { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+.rc-time { font-size: 0.75rem; color: #6b7280; white-space: nowrap; }
 
 /* ✅ Completed task styles */
 .completed-task {
   border-left: 5px solid #28a745;
   background: #f6fff6;
   color: #666;
-  opacity: 0.85;
+  opacity: 0.95;
   transition: background 0.3s, opacity 0.3s;
 }
+.completed-task:hover { opacity: 1; background: #e8ffe8; }
+.completed-task .task-name { font-weight: 500; color: #4caf50; }
+.checkmark { color: #28a745; font-weight: bold; margin-right: 6px; }
 
-.completed-task:hover {
-  opacity: 1;
-  background: #e8ffe8;
-}
-
-.completed-task .task-name {
-  /* text-decoration: line-through; */
-  font-weight: 500;
-  color: #4caf50;
-}
-
-.checkmark {
-  color: #28a745;
-  font-weight: bold;
-  margin-right: 6px;
-}
-
-
-
-/* responsive tweaks */
+/* responsive */
 @media (max-width: 900px) {
-  .task-summary { grid-template-columns: 50% 22% 28%; }
+  .task-summary { grid-template-columns: 25% 35% 18% 22%; }
   .task-inline-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
 @media (max-width: 640px) {
-  .two-column { grid-template-columns: 1fr; }
-  .task-summary { grid-template-columns: 60% 40%; }
+  .task-summary { grid-template-columns: 45% 55%; }
   .task-remark-inline { grid-column: 1 / -1; }
 }

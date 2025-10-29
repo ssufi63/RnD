@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { FaClipboardList, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./ProjectDetailsPanel.css";
@@ -7,6 +7,7 @@ import AddMemberModal from "./modals/AddMemberModal";
 import ProjectFormEdit from "./modals/ProjectFormEdit";
 import TaskDetailModal from "./modals/TaskDetailModal";
 import { formatPrettyDate } from "../utils/formatDate";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 /**
  * Props:
@@ -39,73 +40,102 @@ export default function ProjectDetailsPanel({ project, hideHeader = false }) {
     })();
   }, []);
 
-  // load data
-  useEffect(() => {
-    if (!project?.project_id) return;
-    fetchTasks();
-    fetchMembers();
+// load data + realtime
+useEffect(() => {
+  if (!project?.project_id) return;
 
-    const ch = supabase
-      .channel(`rt-details-${project.project_id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "kanban_tasks",
-          filter: `project_id=eq.${project.project_id}`,
-        },
-        fetchTasks
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "task_remarks",
-          filter: `project_id=eq.${project.project_id}`,
-        },
-        fetchTasks
-      )
-      .subscribe();
+  fetchTasks();
+  fetchMembers();
 
-    return () => supabase.removeChannel(ch);
-  }, [project?.project_id]);
+  // --- Setup realtime channel ---
+  const channel = supabase.channel(`rt-project-${project.project_id}`);
+
+  const refresh = () => {
+    // slight debounce to avoid multiple triggers at once
+    clearTimeout(window._realtimeFetchTimeout);
+    window._realtimeFetchTimeout = setTimeout(() => fetchTasks(), 200);
+  };
+
+  channel
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "kanban_tasks",
+        filter: `project_id=eq.${project.project_id}`,
+      },
+      refresh
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "task_remarks",
+        filter: `project_id=eq.${project.project_id}`,
+      },
+      refresh
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [project?.project_id]);
+
 
   // fetch tasks
   const fetchTasks = async () => {
-    const { data, error } = await supabase
-      .from("kanban_tasks")
-      .select("*")
-      .eq("project_id", project.project_id);
+    try {
+      const { data, error } = await supabase
+        .from("kanban_tasks")
+        .select("*")
+        .eq("project_id", project.project_id);
 
-    if (error) return setTasks([]);
+      if (error) throw error;
 
-    const sorted = [...(data || [])].sort((a, b) => {
-      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-      if (da !== db) return da - db;
-      const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return ca - cb;
-    });
+      const sorted = [...(data || [])].sort((a, b) => {
+        // Prefer order_index if present, otherwise fallback to deadline/created_at
+        const ai = typeof a.order_index === "number" ? a.order_index : null;
+        const bi = typeof b.order_index === "number" ? b.order_index : null;
+        if (ai !== null || bi !== null) {
+          return (ai ?? Number.MAX_SAFE_INTEGER) - (bi ?? Number.MAX_SAFE_INTEGER);
+        }
+        const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        if (da !== db) return da - db;
+        const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return ca - cb;
+      });
 
-    setTasks(sorted);
-    if (sorted.length) {
-      await fetchLatestRemarksForTasks(sorted.map((t) => t.id));
-    } else {
+      setTasks(sorted);
+      if (sorted.length) {
+        await fetchLatestRemarksForTasks(sorted.map((t) => t.id));
+      } else {
+        setLastRemarkByTask({});
+      }
+    } catch (e) {
+      console.error("fetchTasks error:", e);
+      setTasks([]);
       setLastRemarkByTask({});
     }
   };
 
   const fetchMembers = async () => {
-    const { data, error } = await supabase
-      .from("project_members")
-      .select("user_id, profiles(full_name, email)")
-      .eq("project_id", project.project_id);
+    try {
+      const { data, error } = await supabase
+        .from("project_members")
+        .select("user_id, profiles(full_name, email)")
+        .eq("project_id", project.project_id);
 
-    if (error) return setMembers([]);
-    setMembers(data || []);
+      if (error) throw error;
+      setMembers(data || []);
+    } catch (e) {
+      console.error("fetchMembers error:", e);
+      setMembers([]);
+    }
   };
 
   const fetchLatestRemarksForTasks = async (taskIds) => {
@@ -115,7 +145,6 @@ export default function ProjectDetailsPanel({ project, hideHeader = false }) {
       .select("task_id, remark, created_at, profiles(full_name)")
       .in("task_id", taskIds)
       .order("created_at", { ascending: false });
-
     if (error) return;
     const map = {};
     (data || []).forEach((r) => {
@@ -179,6 +208,27 @@ export default function ProjectDetailsPanel({ project, hideHeader = false }) {
     if (selectedTaskId) await selectTask(selectedTaskId);
   };
 
+  // DRAG & DROP — persist order_index (creates sequential order every time)
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    const reordered = Array.from(tasks);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+    setTasks(reordered);
+
+    // Persist sequential order_index (0..n-1). If the column doesn't exist,
+    // the updates will be ignored harmlessly by PostgREST/Supabase.
+    try {
+      await Promise.all(
+        reordered.map((t, idx) =>
+          supabase.from("kanban_tasks").update({ order_index: idx }).eq("id", t.id)
+        )
+      );
+    } catch (e) {
+      console.warn("Order persist warning:", e?.message || e);
+    }
+  };
+
   return (
     <div className="project-details-wrapper">
       {/* Members row */}
@@ -202,202 +252,232 @@ export default function ProjectDetailsPanel({ project, hideHeader = false }) {
         {tasks.length === 0 ? (
           <p className="empty-text">No tasks yet.</p>
         ) : (
-          <div className="task-list">
-            {tasks.map((t) => {
-              const isExpanded = expandedTaskId === t.id;
-              const last = lastRemarkByTask[t.id];
-
-              return (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="task-list">
+              {(dropProvided) => (
                 <div
-                  key={t.id}
-                  className={`task-row ${
-                    t.status === "Completed" ? "completed-task" : ""
-                  }`}
+                  className="task-list"
+                  ref={dropProvided.innerRef}
+                  {...dropProvided.droppableProps}
                 >
-                  {/* summary row */}
-                  <div className="task-summary" onClick={() => selectTask(t.id)}>
-                    <span className="task-name">
-                      {t.status === "Completed" && (
-                        <span className="checkmark">✓</span>
-                      )}{" "}
-                      {t.title}
-                    </span>
+                  {tasks.map((t, index) => {
+                    const isExpanded = expandedTaskId === t.id;
+                    const last = lastRemarkByTask[t.id];
+                    const assigneeName =
+                      t.assigned_to &&
+                      members.find((m) => m.user_id === t.assigned_to)?.profiles
+                        ?.full_name;
 
-                    <span className="task-deadline">
-                      {t.status === "Completed"
-                        ? t.completion_date
-                          ? formatPrettyDate(t.completion_date)
-                          : "—"
-                        : t.deadline
-                        ? formatPrettyDate(t.deadline)
-                        : "—"}
-                    </span>
-
-                    <span className="task-remark-inline">
-                      {last
-                        ? `${last.profiles?.full_name || "Unknown"}: ${
-                            last.remark
-                          }`
-                        : "No remarks yet"}
-                    </span>
-
-                    <button
-                      className="expand-btn-large"
-                      title={isExpanded ? "Collapse" : "Expand"}
-                    >
-                      {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
-                    </button>
-                  </div>
-
-                  {/* expanded details */}
-                  {isExpanded && (
-                    <div className="task-inline">
-                      <div className="task-inline-grid">
-                        <div>
-                          <div className="ti-label">Description</div>
-                          <div className="ti-value">
-                            {t.description || "—"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="ti-label">
-                            {t.status === "Completed"
-                              ? "Completed On"
-                              : "Deadline"}
-                          </div>
-                          <div className="ti-value">
-                            {t.status === "Completed"
-                              ? t.completion_date
-                                ? formatPrettyDate(t.completion_date)
-                                : "—"
-                              : t.deadline
-                              ? formatPrettyDate(t.deadline)
-                              : "—"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="ti-label">Status</div>
-                          <div className="ti-value">{t.status || "—"}</div>
-                        </div>
-                        <div>
-                          <div className="ti-label">Assignee</div>
-                          <div className="ti-value">
-                            {t.assigned_to
-                              ? members.find(
-                                  (m) => m.user_id === t.assigned_to
-                                )?.profiles?.full_name || "—"
-                              : "Unassigned"}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* inline actions */}
-                      <div className="task-inline-actions">
-                        <button
-                          className="btn-outline"
-                          onClick={() => setEditTask(t)}
-                        >
-                          📝 Edit
-                        </button>
-
-                        <button
-                          className="btn-outline"
-                          onClick={() =>
-                            setAssigneePickerOpenFor(
-                              assigneePickerOpenFor === t.id ? null : t.id
-                            )
-                          }
-                        >
-                          👤 Assign
-                        </button>
-
-                        <button
-                          className="btn-outline"
-                          onClick={() =>
-                            setRemarkEditorOpenFor(
-                              remarkEditorOpenFor === t.id ? null : t.id
-                            )
-                          }
-                        >
-                          💬 Add Remark
-                        </button>
-                      </div>
-
-                      {/* assign dropdown */}
-                      {assigneePickerOpenFor === t.id && (
-                        <div className="assign-inline">
-                          <select
-                            value={t.assigned_to || ""}
-                            onChange={(e) =>
-                              updateAssignee(t.id, e.target.value || null)
-                            }
+                    return (
+                      <Draggable key={t.id} draggableId={String(t.id)} index={index}>
+                        {(dragProvided) => (
+                          <div
+                            className={`task-row ${
+                              t.status === "Completed" ? "completed-task" : ""
+                            }`}
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            {...dragProvided.dragHandleProps}
                           >
-                            <option value="">Unassigned</option>
-                            {members.map((m) => (
-                              <option key={m.user_id} value={m.user_id}>
-                                {m.profiles?.full_name || m.user_id}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {/* remark editor */}
-                      {remarkEditorOpenFor === t.id && (
-                        <div className="remark-inline">
-                          <textarea
-                            value={remarkDraftByTask[t.id] || ""}
-                            placeholder="Write a remark..."
-                            onChange={(e) =>
-                              setRemarkDraftByTask((d) => ({
-                                ...d,
-                                [t.id]: e.target.value,
-                              }))
-                            }
-                          />
-                          <div className="remark-inline-actions">
-                            <button
-                              className="btn-blue small"
-                              onClick={() => saveRemark(t.id)}
+                            {/* summary row */}
+                            <div
+                              className="task-summary"
+                              onClick={() => selectTask(t.id)}
                             >
-                              Save
-                            </button>
-                            <button
-                              className="btn-gray small"
-                              onClick={() => cancelRemark(t.id)}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                              {/* Assignee pill FIRST */}
+                              <span className="task-assignee">
+                                {assigneeName || "Unassigned"}
+                              </span>
 
-                      {/* task remarks under expanded box */}
-                      {selectedTaskId === t.id &&
-                        selectedTaskRemarks.length > 0 && (
-                          <div className="task-remarks-inline">
-                            <h4>Remarks</h4>
-                            {selectedTaskRemarks.map((r) => (
-                              <div key={r.id} className="remark-chip">
-                                <div className="rc-line">
-                                  <strong>
-                                    {r.profiles?.full_name || "Unknown"}:
-                                  </strong>{" "}
-                                  <span className="rc-text">{r.remark}</span>
+                              {/* Task name (left aligned) */}
+                              <span className="task-name">
+                                {t.status === "Completed" && (
+                                  <span className="checkmark">✓</span>
+                                )}{" "}
+                                {t.title}
+                              </span>
+
+                              {/* Date (deadline or completion) */}
+                              <span className="task-deadline">
+                                {t.status === "Completed"
+                                  ? t.completion_date
+                                    ? formatPrettyDate(t.completion_date)
+                                    : "—"
+                                  : t.deadline
+                                  ? formatPrettyDate(t.deadline)
+                                  : "—"}
+                              </span>
+
+                              {/* Last remark inline */}
+                              <span className="task-remark-inline">
+                                {last
+                                  ? ` ${
+                                      last.remark
+                                    }`
+                                  : "No remarks yet"}
+                              </span>
+
+                              <button
+                                className="expand-btn-large"
+                                title={isExpanded ? "Collapse" : "Expand"}
+                              >
+                                {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
+                              </button>
+                            </div>
+
+                            {/* expanded details */}
+                            {isExpanded && (
+                              <div className="task-inline">
+                                <div className="task-inline-grid">
+                                  <div>
+                                    <div className="ti-label">Description</div>
+                                    <div className="ti-value">
+                                      {t.description || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="ti-label">
+                                      {t.status === "Completed"
+                                        ? "Completed On"
+                                        : "Deadline"}
+                                    </div>
+                                    <div className="ti-value">
+                                      {t.status === "Completed"
+                                        ? t.completion_date
+                                          ? formatPrettyDate(t.completion_date)
+                                          : "—"
+                                        : t.deadline
+                                        ? formatPrettyDate(t.deadline)
+                                        : "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="ti-label">Status</div>
+                                    <div className="ti-value">
+                                      {t.status || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="ti-label">Assignee</div>
+                                    <div className="ti-value">
+                                      {assigneeName || "Unassigned"}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="rc-time">
-                                  {formatPrettyDate(r.created_at)}
+
+                                {/* inline actions */}
+                                <div className="task-inline-actions">
+                                  <button
+                                    className="btn-outline"
+                                    onClick={() => setEditTask(t)}
+                                  >
+                                    📝 Edit
+                                  </button>
+
+                                  <button
+                                    className="btn-outline"
+                                    onClick={() =>
+                                      setAssigneePickerOpenFor(
+                                        assigneePickerOpenFor === t.id ? null : t.id
+                                      )
+                                    }
+                                  >
+                                    👤 Assign
+                                  </button>
+
+                                  <button
+                                    className="btn-outline"
+                                    onClick={() =>
+                                      setRemarkEditorOpenFor(
+                                        remarkEditorOpenFor === t.id ? null : t.id
+                                      )
+                                    }
+                                  >
+                                    💬 Add Remark
+                                  </button>
                                 </div>
+
+                                {/* assign dropdown */}
+                                {assigneePickerOpenFor === t.id && (
+                                  <div className="assign-inline">
+                                    <select
+                                      value={t.assigned_to || ""}
+                                      onChange={(e) =>
+                                        updateAssignee(t.id, e.target.value || null)
+                                      }
+                                    >
+                                      <option value="">Unassigned</option>
+                                      {members.map((m) => (
+                                        <option key={m.user_id} value={m.user_id}>
+                                          {m.profiles?.full_name || m.user_id}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+
+                                {/* remark editor */}
+                                {remarkEditorOpenFor === t.id && (
+                                  <div className="remark-inline">
+                                    <textarea
+                                      value={remarkDraftByTask[t.id] || ""}
+                                      placeholder="Write a remark..."
+                                      onChange={(e) =>
+                                        setRemarkDraftByTask((d) => ({
+                                          ...d,
+                                          [t.id]: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                    <div className="remark-inline-actions">
+                                      <button
+                                        className="btn-blue small"
+                                        onClick={() => saveRemark(t.id)}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        className="btn-gray small"
+                                        onClick={() => cancelRemark(t.id)}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* task remarks list */}
+                                {selectedTaskId === t.id &&
+                                  selectedTaskRemarks.length > 0 && (
+                                    <div className="task-remarks-inline">
+                                      <h4>Remarks</h4>
+                                      {selectedTaskRemarks.map((r) => (
+                                        <div key={r.id} className="remark-chip">
+                                          <div className="rc-line">
+                                            <strong>
+                                              {r.profiles?.full_name || "Unknown"}:
+                                            </strong>{" "}
+                                            <span className="rc-text">{r.remark}</span>
+                                          </div>
+                                          <div className="rc-time">
+                                            {formatPrettyDate(r.created_at)}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                               </div>
-                            ))}
+                            )}
                           </div>
                         )}
-                    </div>
-                  )}
+                      </Draggable>
+                    );
+                  })}
+                  {dropProvided.placeholder}
                 </div>
-              );
-            })}
-          </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
       </section>
 
