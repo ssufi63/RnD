@@ -137,6 +137,33 @@ export default function ProjectsBoardPage({ role }) {
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
+function ProjectHeaderMembers({ projectId }) {
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("project_members")
+        .select("profiles(full_name)")
+        .eq("project_id", projectId);
+      if (!error) setMembers(data || []);
+    })();
+  }, [projectId]);
+
+  if (!members.length) return null;
+
+  return (
+    <div className="header-members">
+      {members.map((m, i) => (
+        <span key={i} className="header-member-pill">
+          {m.profiles?.full_name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
   // ---------- RENDER ----------
   return (
     <div className={`projects-board-page ${isFullScreen ? "fullscreen" : ""}`}>
@@ -182,12 +209,15 @@ export default function ProjectsBoardPage({ role }) {
           <div className="empty-state">Select a project to view.</div>
         ) : (
           <>
-            <div className="project-header">
-              <div className="left">
-                <h2 className="project-title">
-                  {selectedProject.name} — <span>Details</span>
-                </h2>
-              </div>
+         <div className="project-header">
+  <div className="left">
+    <h2 className="project-title">
+      {selectedProject.name} — <span>Details</span>
+    </h2>
+
+    <ProjectHeaderMembers projectId={selectedProject.project_id} />
+  </div>
+
 
               <div className="right">
                 <button className="btn primary" onClick={() => setShowTaskModal(true)}>
