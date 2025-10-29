@@ -330,9 +330,9 @@ useEffect(() => {
                               <div className="task-inline">
                                 <div className="task-inline-grid">
                                   <div>
-                                    <div className="ti-label">Description</div>
+                                    <div className="ti-label">Title</div>
                                     <div className="ti-value">
-                                      {t.description || "—"}
+                                      {t.title || "—"}
                                     </div>
                                   </div>
                                   <div>
@@ -358,9 +358,9 @@ useEffect(() => {
                                     </div>
                                   </div>
                                   <div>
-                                    <div className="ti-label">Assignee</div>
+                                    <div className="ti-label">Description</div>
                                     <div className="ti-value">
-                                      {assigneeName || "Unassigned"}
+                                      {t.description || "—"}
                                     </div>
                                   </div>
                                 </div>
@@ -503,13 +503,17 @@ useEffect(() => {
           onProjectUpdated={fetchTasks}
         />
       )}
-      {editTask && (
-        <TaskDetailModal
-          task={editTask}
-          onClose={() => setEditTask(null)}
-          onTaskUpdated={handleTaskUpdated}
-        />
-      )}
+   {editTask && (
+  <TaskDetailModal
+    task={editTask}
+    onClose={() => setEditTask(null)}
+    onTaskUpdated={async () => {
+      await handleTaskUpdated();
+      setEditTask(null); // 👈 closes modal right after Save
+    }}
+  />
+)}
+
     </div>
   );
 }
