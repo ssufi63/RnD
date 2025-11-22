@@ -19,6 +19,7 @@ export default function TaskDetailModal({ task, onClose, onTaskUpdated }) {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("");
   const [completionDate, setCompletionDate] = useState("");
+  const [deadline, setDeadline] = useState(""); // <- editable deadline only
 
   // UI overlays
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -29,12 +30,18 @@ export default function TaskDetailModal({ task, onClose, onTaskUpdated }) {
     if (!task) return;
     setDescription(task.description || "");
     setStatus(task.status || "");
-    // store as yyyy-mm-dd string for the input
-    const cd =
-      task.completion_date
-        ? new Date(task.completion_date).toISOString().slice(0, 10)
-        : "";
+
+    // completion date as yyyy-mm-dd
+    const cd = task.completion_date
+      ? new Date(task.completion_date).toISOString().slice(0, 10)
+      : "";
     setCompletionDate(cd);
+
+    // deadline as yyyy-mm-dd for the input
+    const dl = task.deadline
+      ? new Date(task.deadline).toISOString().slice(0, 10)
+      : "";
+    setDeadline(dl);
   }, [task]);
 
   // load related profiles for display
@@ -66,37 +73,37 @@ export default function TaskDetailModal({ task, onClose, onTaskUpdated }) {
     loadProfiles();
   }, [task]);
 
-// ✅ Final working save for kanban_tasks (with completion_date)
-const handleSave = async () => {
-  if (!task?.id) return;
+  // SAVE — updates description, status, completion_date, deadline
+  const handleSave = async () => {
+    if (!task?.id) return;
 
-  const payload = {
-    description: description?.trim() || null,
-    status: status || null,
-    completion_date: completionDate || null, // ← newly added column
-    updated_at: new Date().toISOString(),
+    const payload = {
+      description: description?.trim() || null,
+      status: status || null,
+      completion_date: completionDate || null,
+      deadline: deadline || null, // <- update deadline
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("kanban_tasks")
+      .update(payload)
+      .eq("id", task.id);
+
+    if (error) {
+      console.error("Save error:", error);
+      alert("Save failed: " + error.message);
+    } else {
+      setEditing(false);
+      setShowSuccess(true);
+
+      // Refresh the parent after save
+      onTaskUpdated && onTaskUpdated();
+
+      // Hide success tick after 1 s
+      setTimeout(() => setShowSuccess(false), 1000);
+    }
   };
-
-  const { error } = await supabase
-    .from("kanban_tasks")
-    .update(payload)
-    .eq("id", task.id);
-
-  if (error) {
-    console.error("Save error:", error);
-    alert("Save failed: " + error.message);
-  } else {
-    setEditing(false);
-    setShowSuccess(true);
-
-    // Refresh the parent after save
-    onTaskUpdated && onTaskUpdated();
-
-    // Hide success tick after 1 s
-    setTimeout(() => setShowSuccess(false), 1000);
-  }
-};
-
 
   // Delete with confirm
   const handleDelete = async () => {
@@ -160,19 +167,30 @@ const handleSave = async () => {
             </p>
           )}
 
-          {/* Dates (read-only) */}
+          {/* Start Date (read-only) */}
           {task.start_date && (
             <p className="task-detail">
               <strong>Start Date:</strong>{" "}
               {new Date(task.start_date).toLocaleDateString()}
             </p>
           )}
-          {task.deadline && (
-            <p className="task-detail">
-              <strong>Deadline:</strong>{" "}
-              {new Date(task.deadline).toLocaleDateString()}
-            </p>
-          )}
+
+          {/* Deadline (editable when editing) */}
+          <p className="task-detail">
+            <strong>Deadline:</strong>{" "}
+            {editing ? (
+              <input
+                className="modal-input"
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+              />
+            ) : (
+              task.deadline
+                ? new Date(task.deadline).toLocaleDateString()
+                : "—"
+            )}
+          </p>
 
           {/* Status */}
           <p className="task-detail">
